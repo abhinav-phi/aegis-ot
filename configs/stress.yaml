@@ -1,0 +1,6 @@
+# Stress protocol grid (EVAL-02 / R-ML-08). Applied to TEST split only,
+# identically to both ROB arms. Magnitudes are committed here.
+noise_sigmas: [0.05, 0.10, 0.20]
+zero_fractions: [0.05, 0.10]
+drift_slopes: [0.001, 0.005]
+seeds: [1, 2, 3]
