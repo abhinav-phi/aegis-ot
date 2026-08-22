@@ -1,0 +1,52 @@
+# AEGIS-OT policy grammar (R2). Strict: unknown fields/params rejected by C2.
+actions:
+  snapshot_plant_state:
+    risk: read
+    targets: ["PLANT"]
+    citation_free_read: true
+    params: {}
+  query_tank_level:
+    risk: read
+    targets: ["T-101", "T-301", "T-501", "T-601"]
+    params: {}
+  set_pump_speed:
+    risk: control
+    targets: ["P-101", "P-102", "P-103", "P-104", "P-105", "P-106"]
+    params:
+      speed_pct: {type: float, required: true, min: 0.0, max: 100.0}
+  open_valve:
+    risk: control
+    targets: ["MV-201", "MV-301", "MV-501"]
+    params: {}
+  close_valve:
+    risk: control
+    targets: ["MV-201", "MV-301", "MV-501"]
+    params: {}
+  set_tank_setpoint:
+    risk: write
+    targets: ["T-101", "T-301", "T-501", "T-601"]
+    params:
+      level_pct: {type: float, required: true, min: 0.0, max: 100.0}
+  update_alarm_threshold:
+    risk: write
+    targets: ["*sensor*"]
+    params:
+      sensor: {type: string, required: true}
+      threshold: {type: float, required: true, min: -1000000.0, max: 1000000.0}
+  direct_plc_write:
+    risk: forbidden
+    targets: ["*"]
+    params:
+      address: {type: string, required: false}
+
+# VAL-002 plan-level composition policy (deterministic).
+forbidden_combinations:
+  # Alarm-suppression + actuation combo: never co-occur in one revision.
+  - [update_alarm_threshold, set_pump_speed]
+  - [update_alarm_threshold, close_valve]
+
+required_order:
+  # Isolate before actuation: valve open must precede pump ramp when both present.
+  - [open_valve, set_pump_speed]
+
+evidence_freshness_s: 3600   # trusted evidence older than this ⇒ C5 stale_evidence flag
