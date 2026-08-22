@@ -1,0 +1,226 @@
+FEFE...F..EF.FFE...........F...FFsFEFEFEF...FFFFFFFFs..FEFFFFF.......... [ 80%]
+................                                                         [100%]
+=================================== ERRORS ====================================
+________ ERROR at teardown of test_naive_draft_gets_draft_only_status _________
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+    [SQL: INSERT INTO mitigation_plans (id, incident_id, agent_run_id, revision_no, supersedes_id, steps, steps_hash, canonical_bytes, revision_created_by, execution_lease_until, status, active_validator_result_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('613bb800eedd4dc3b6d84cd0f504bda2', '1cb91b1394b1427e8d4b7f2d0e9bec61', 'c295e021c4504f10aeca01d0807809ef', 1, None, '[{"step_no": 1, "action": "set_pump_speed", "target": "P-101", "params": {"speed_pct": 0}, "citations": []}]', '48b38472ba703876a512305f412148f622c1d73a0f934786d685d3aad6d4feff', <memory at 0x000001DE6D7153C0>, 'ab1b9fc75a48484fa1e7769aa2cf445d', None, 'draft_only', None, '2026-08-22 10:26:28.649560')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+______ ERROR at teardown of test_grounded_draft_gets_validation_pending _______
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+    [SQL: INSERT INTO mitigation_plans (id, incident_id, agent_run_id, revision_no, supersedes_id, steps, steps_hash, canonical_bytes, revision_created_by, execution_lease_until, status, active_validator_result_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('95e691ef340d4ac5ae06cf17175319e8', '435f258e53d34c4e87015ec5e0094b0c', '0b93587fc433411ca720dc1e16da8de1', 1, None, '[{"step_no": 1, "action": "snapshot_plant_state", "target": "PLANT", "params": {}, "citations": []}]', '79bcd3e23d69ec127af2d2d192fc6d814e2a2bd788c834152a24c2baba8bd11f', <memory at 0x000001DE6D715CC0>, '9be609e4ba404309b7c2bff422e26561', None, 'draft_for_validation', None, '2026-08-22 10:26:29.503418')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+________ ERROR at teardown of test_duplicate_active_agent_run_blocked _________
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+    [SQL: INSERT INTO agent_runs (id, incident_id, model_name, variant, status, steps, config_hash, lease_until, created_by, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('21f5f6d130544df1b3f5c897b6a22edc', 'f4623954f98f445e8a8d415db8e78579', 'x', 'grounded', 'running', 0, None, None, None, '2026-08-22 10:26:32.264893', None)]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+_________________ ERROR at teardown of test_demo_flow_offline _________________
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) UNIQUE constraint failed: rag_documents.source, rag_documents.version
+    [SQL: INSERT INTO rag_documents (id, title, source, tier, doc_hash, version, superseded, collection, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('7396f05e66fb45ed8cabcf378c528e49', 'Playbook SPD-017 High Level Alarm', 'fixture', 'trusted', 'a9a9f4262d4f780c7b1d0301e490be03c5308231c0469458873dfb4606efa0a1', 1, 0, 'aegis_kb_eval_demo', '2026-08-22 10:26:36.643549')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+_______ ERROR at teardown of test_naive_execution_forbidden_at_sandbox ________
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+    [SQL: INSERT INTO agent_runs (id, incident_id, model_name, variant, status, steps, config_hash, lease_until, created_by, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('9c8b2e3824e3498ea95299403cb332a2', '561725199dec438494686bb190e37e95', 't', 'naive', 'running', 0, None, None, '965738de11604becb103988bbdac70b1', '2026-08-22 10:26:42.017292', None)]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+___________ ERROR at teardown of test_naive_plan_cannot_be_approved ___________
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+    [SQL: INSERT INTO agent_runs (id, incident_id, model_name, variant, status, steps, config_hash, lease_until, created_by, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('8effd8b0f41e4ebb98384f61aa966c4d', '787076fb7cb44e539b5e2898211b17a8', 't', 'naive', 'running', 0, None, None, '2da04c8ed40443d79bef9ce482b2bfd3', '2026-08-22 10:26:42.903544', None)]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+________________ ERROR at teardown of test_naive_service_gate _________________
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+    [SQL: INSERT INTO agent_runs (id, incident_id, model_name, variant, status, steps, config_hash, lease_until, created_by, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('f2849ec60162466c896511a12846e907', 'c30460b619ca49c7ab492dd0c81ee085', 't', 'naive', 'running', 0, None, None, '51151095d4f14d9aa01bba16f9db53f7', '2026-08-22 10:26:43.792402', None)]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+_________ ERROR at teardown of test_forbidden_edge_closed_to_anything _________
+E   sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) CHECK constraint failed: ck_incidents_ck_incident_closed_reason_pairing
+    [SQL: UPDATE incidents SET status=?, closed_reason=? WHERE incidents.id = ?]
+    [parameters: ('closed', 'no_action', 'd4d13ec723c1400d80143ebbbd194d30')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+================================== FAILURES ===================================
+E   sqlite3.IntegrityError: UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+    [SQL: INSERT INTO mitigation_plans (id, incident_id, agent_run_id, revision_no, supersedes_id, steps, steps_hash, canonical_bytes, revision_created_by, execution_lease_until, status, active_validator_result_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('613bb800eedd4dc3b6d84cd0f504bda2', '1cb91b1394b1427e8d4b7f2d0e9bec61', 'c295e021c4504f10aeca01d0807809ef', 1, None, '[{"step_no": 1, "action": "set_pump_speed", "target": "P-101", "params": {"speed_pct": 0}, "citations": []}]', '48b38472ba703876a512305f412148f622c1d73a0f934786d685d3aad6d4feff', <memory at 0x000001DE6D7153C0>, 'ab1b9fc75a48484fa1e7769aa2cf445d', None, 'draft_only', None, '2026-08-22 10:26:28.649560')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj)
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\default.py:919: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+E   sqlite3.IntegrityError: UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+    [SQL: INSERT INTO mitigation_plans (id, incident_id, agent_run_id, revision_no, supersedes_id, steps, steps_hash, canonical_bytes, revision_created_by, execution_lease_until, status, active_validator_result_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('95e691ef340d4ac5ae06cf17175319e8', '435f258e53d34c4e87015ec5e0094b0c', '0b93587fc433411ca720dc1e16da8de1', 1, None, '[{"step_no": 1, "action": "snapshot_plant_state", "target": "PLANT", "params": {}, "citations": []}]', '79bcd3e23d69ec127af2d2d192fc6d814e2a2bd788c834152a24c2baba8bd11f', <memory at 0x000001DE6D715CC0>, '9be609e4ba404309b7c2bff422e26561', None, 'draft_for_validation', None, '2026-08-22 10:26:29.503418')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj)
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\default.py:919: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: mitigation_plans.agent_run_id, mitigation_plans.revision_no
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   TypeError: amend() got an unexpected keyword argument 'approver'
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\e2e\test_offline_flows.py:21: TypeError: amend() got an unexpected keyword argument 'approver'
+E   sqlite3.IntegrityError: UNIQUE constraint failed: rag_documents.source, rag_documents.version
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: rag_documents.source, rag_documents.version
+    [SQL: INSERT INTO rag_documents (id, title, source, tier, doc_hash, version, superseded, collection, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('7396f05e66fb45ed8cabcf378c528e49', 'Playbook SPD-017 High Level Alarm', 'fixture', 'trusted', 'a9a9f4262d4f780c7b1d0301e490be03c5308231c0469458873dfb4606efa0a1', 1, 0, 'aegis_kb_eval_demo', '2026-08-22 10:26:36.643549')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj)
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\default.py:919: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: rag_documents.source, rag_documents.version
+E   KeyError: 'ae1be04c-3084-4ebf-858b-06adcfa74917:0'
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\pipeline\rag\kb.py:117: KeyError: 'ae1be04c-3084-4ebf-858b-06adcfa74917:0'
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   sqlite3.IntegrityError: NOT NULL constraint failed: agent_runs.config_hash
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+    [SQL: INSERT INTO agent_runs (id, incident_id, model_name, variant, status, steps, config_hash, lease_until, created_by, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('9c8b2e3824e3498ea95299403cb332a2', '561725199dec438494686bb190e37e95', 't', 'naive', 'running', 0, None, None, '965738de11604becb103988bbdac70b1', '2026-08-22 10:26:42.017292', None)]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj)
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\default.py:919: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+E   sqlite3.IntegrityError: NOT NULL constraint failed: agent_runs.config_hash
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+    [SQL: INSERT INTO agent_runs (id, incident_id, model_name, variant, status, steps, config_hash, lease_until, created_by, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('8effd8b0f41e4ebb98384f61aa966c4d', '787076fb7cb44e539b5e2898211b17a8', 't', 'naive', 'running', 0, None, None, '2da04c8ed40443d79bef9ce482b2bfd3', '2026-08-22 10:26:42.903544', None)]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj)
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\default.py:919: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+E   sqlite3.IntegrityError: NOT NULL constraint failed: agent_runs.config_hash
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+    [SQL: INSERT INTO agent_runs (id, incident_id, model_name, variant, status, steps, config_hash, lease_until, created_by, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+    [parameters: ('f2849ec60162466c896511a12846e907', 'c30460b619ca49c7ab492dd0c81ee085', 't', 'naive', 'running', 0, None, None, '51151095d4f14d9aa01bba16f9db53f7', '2026-08-22 10:26:43.792402', None)]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj)
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\default.py:919: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: agent_runs.config_hash
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   TypeError: amend() got an unexpected keyword argument 'approver'
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_plan_hash_binding.py:39: TypeError: amend() got an unexpected keyword argument 'approver'
+E   TypeError: amend() got an unexpected keyword argument 'approver'
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_plan_hash_binding.py:57: TypeError: amend() got an unexpected keyword argument 'approver'
+E   assert 422 == 200
+     +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+---------------------------- Captured stdout call -----------------------------
+{"ts": "2026-08-22T15:56:50+0530", "level": "INFO", "logger": "aegis.app", "msg": "http", "request_id": "40f2d789260d41dd"}
+{"ts": "2026-08-22T15:56:50+0530", "level": "INFO", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/auth/login \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+------------------------------ Captured log call ------------------------------
+INFO     aegis.app:main.py:46 http
+INFO     httpx:_client.py:1026 HTTP Request: POST http://testserver/auth/login "HTTP/1.1 422 Unprocessable Entity"
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_rbac_and_auth.py:13: assert 422 == 200
+E   assert 422 == 401
+     +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+---------------------------- Captured stdout call -----------------------------
+{"ts": "2026-08-22T15:56:50+0530", "level": "INFO", "logger": "aegis.app", "msg": "http", "request_id": "dd5013a8fc3c4bfb"}
+{"ts": "2026-08-22T15:56:50+0530", "level": "INFO", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/auth/login \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+------------------------------ Captured log call ------------------------------
+INFO     aegis.app:main.py:46 http
+INFO     httpx:_client.py:1026 HTTP Request: POST http://testserver/auth/login "HTTP/1.1 422 Unprocessable Entity"
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_rbac_and_auth.py:22: assert 422 == 401
+E   KeyError: 'data'
+---------------------------- Captured stdout call -----------------------------
+{"ts": "2026-08-22T15:56:51+0530", "level": "INFO", "logger": "aegis.app", "msg": "http", "request_id": "4596ba6b125f401a"}
+{"ts": "2026-08-22T15:56:51+0530", "level": "INFO", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/auth/login \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+------------------------------ Captured log call ------------------------------
+INFO     aegis.app:main.py:46 http
+INFO     httpx:_client.py:1026 HTTP Request: POST http://testserver/auth/login "HTTP/1.1 422 Unprocessable Entity"
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_rbac_and_auth.py:28: KeyError: 'data'
+E   KeyError: 'data'
+---------------------------- Captured stdout call -----------------------------
+{"ts": "2026-08-22T15:56:52+0530", "level": "INFO", "logger": "aegis.app", "msg": "http", "request_id": "a959885396f04c37"}
+{"ts": "2026-08-22T15:56:52+0530", "level": "INFO", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/auth/login \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+------------------------------ Captured log call ------------------------------
+INFO     aegis.app:main.py:46 http
+INFO     httpx:_client.py:1026 HTTP Request: POST http://testserver/auth/login "HTTP/1.1 422 Unprocessable Entity"
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_rbac_and_auth.py:35: KeyError: 'data'
+E   KeyError: 'data'
+---------------------------- Captured stdout call -----------------------------
+{"ts": "2026-08-22T15:56:53+0530", "level": "INFO", "logger": "aegis.app", "msg": "http", "request_id": "78ca0dc577944e40"}
+{"ts": "2026-08-22T15:56:53+0530", "level": "INFO", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/auth/login \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+------------------------------ Captured log call ------------------------------
+INFO     aegis.app:main.py:46 http
+INFO     httpx:_client.py:1026 HTTP Request: POST http://testserver/auth/login "HTTP/1.1 422 Unprocessable Entity"
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_rbac_and_auth.py:41: KeyError: 'data'
+E   KeyError: 'data'
+---------------------------- Captured stdout call -----------------------------
+{"ts": "2026-08-22T15:56:54+0530", "level": "INFO", "logger": "aegis.app", "msg": "http", "request_id": "b686f5f6139641a5"}
+{"ts": "2026-08-22T15:56:54+0530", "level": "INFO", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/auth/login \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+------------------------------ Captured log call ------------------------------
+INFO     aegis.app:main.py:46 http
+INFO     httpx:_client.py:1026 HTTP Request: POST http://testserver/auth/login "HTTP/1.1 422 Unprocessable Entity"
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\tests\security\test_rbac_and_auth.py:50: KeyError: 'data'
+E   sqlite3.IntegrityError: CHECK constraint failed: ck_incidents_ck_incident_closed_reason_pairing
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) CHECK constraint failed: ck_incidents_ck_incident_closed_reason_pairing
+    [SQL: UPDATE incidents SET status=?, closed_reason=? WHERE incidents.id = ?]
+    [parameters: ('closed', 'no_action', 'd4d13ec723c1400d80143ebbbd194d30')]
+    (Background on this error at: https://sqlalche.me/e/20/gkpj)
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\default.py:919: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) CHECK constraint failed: ck_incidents_ck_incident_closed_reason_pairing
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+E   AttributeError: 'str' object has no attribute 'hex'
+
+The above exception was the direct cause of the following exception:
+E   sqlalchemy.exc.StatementError: (builtins.AttributeError) 'str' object has no attribute 'hex'
+    [SQL: UPDATE incidents SET status=?, closed_reason=?, closed_by=? WHERE incidents.id = ? AND incidents.status = ?]
+    [parameters: [{}]]
+C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\sql\sqltypes.py:3590: sqlalchemy.exc.StatementError: (builtins.AttributeError) 'str' object has no attribute 'hex'
+E   TypeError: can't compare offset-naive and offset-aware datetimes
+C:\Users\abhin\Desktop\AEGIS-OT\aegis-ot\app\services\approval_service.py:49: TypeError: can't compare offset-naive and offset-aware datetimes
+============================== warnings summary ===============================
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\abhin\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/agent/test_agent_runner.py::test_naive_draft_gets_draft_only_status
+FAILED tests/agent/test_agent_runner.py::test_grounded_draft_gets_validation_pending
+FAILED tests/concurrency/test_races.py::test_double_execute_rejected - TypeEr...
+FAILED tests/concurrency/test_races.py::test_execute_on_closed_incident_rejected
+FAILED tests/e2e/test_offline_flows.py::test_exp09_battery_all_attempts_rejected
+FAILED tests/e2e/test_offline_flows.py::test_demo_flow_offline - sqlalchemy.e...
+FAILED tests/rag/test_trust_firewall.py::test_retriever_denies_hostile_in_production
+FAILED tests/security/test_approval_guards.py::test_double_approve_rejected
+FAILED tests/security/test_approval_guards.py::test_deny_after_approve_rejected
+FAILED tests/security/test_naive_lockout.py::test_naive_execution_forbidden_at_sandbox
+FAILED tests/security/test_naive_lockout.py::test_naive_plan_cannot_be_approved
+FAILED tests/security/test_naive_lockout.py::test_naive_service_gate - sqlalc...
+FAILED tests/security/test_plan_hash_binding.py::test_execute_after_raw_sql_hash_tamper_is_hard_blocked
+FAILED tests/security/test_plan_hash_binding.py::test_amend_creates_new_revision_and_supersedes
+FAILED tests/security/test_plan_hash_binding.py::test_amend_noop_rejected - T...
+FAILED tests/security/test_rbac_and_auth.py::test_login_success_sets_cookie_and_bearer
+FAILED tests/security/test_rbac_and_auth.py::test_login_wrong_password_generic_error
+FAILED tests/security/test_rbac_and_auth.py::test_viewer_cannot_approve - Key...
+FAILED tests/security/test_rbac_and_auth.py::test_analyst_cannot_list_audit
+FAILED tests/security/test_rbac_and_auth.py::test_admin_can_set_role - KeyErr...
+FAILED tests/security/test_rbac_and_auth.py::test_analyst_cannot_set_role - K...
+FAILED tests/state_machine/test_edges.py::test_forbidden_edge_closed_to_anything
+FAILED tests/state_machine/test_edges.py::test_plan_validated_to_approved_via_approval
+FAILED tests/state_machine/test_edges.py::test_plan_deny_rejected - TypeError...
+FAILED tests/state_machine/test_edges.py::test_rejected_incident_can_retry - ...
+FAILED tests/state_machine/test_edges.py::test_escalation_resolution - sqlalc...
+FAILED tests/state_machine/test_edges.py::test_simulating_failure_escalates
+ERROR tests/agent/test_agent_runner.py::test_naive_draft_gets_draft_only_status
+ERROR tests/agent/test_agent_runner.py::test_grounded_draft_gets_validation_pending
+ERROR tests/concurrency/test_races.py::test_duplicate_active_agent_run_blocked
+ERROR tests/e2e/test_offline_flows.py::test_demo_flow_offline - sqlalchemy.ex...
+ERROR tests/security/test_naive_lockout.py::test_naive_execution_forbidden_at_sandbox
+ERROR tests/security/test_naive_lockout.py::test_naive_plan_cannot_be_approved
+ERROR tests/security/test_naive_lockout.py::test_naive_service_gate - sqlalch...
+ERROR tests/state_machine/test_edges.py::test_forbidden_edge_closed_to_anything
+27 failed, 51 passed, 2 skipped, 1 warning, 8 errors in 38.05s
