@@ -1,0 +1,35 @@
+# Declarative invariant rules (R-ML-14) + validator C5 direction table (DEC-011).
+rules:
+  - id: R1_tank_level_range
+    expr: "0 <= level_pct <= 100"
+    scope: tanks
+    source: "SWaT sensor operating ranges (literature)"
+  - id: R2_pump_flow_consistency
+    expr: "pump.on -> flow > 0.5"
+    scope: pumps_flows
+    source: "pump status vs flow correlation, SWaT stage 1/4"
+  - id: R3_valve_flow_consistency
+    expr: "!valve.open -> flow < 0.1"
+    scope: valves_flows
+    source: "closed valve implies near-zero flow"
+  - id: R4_level_rate_limit
+    expr: "|d(level)/dt| <= 2.0 pct/s"
+    scope: tanks
+    source: "physical fill/empty rate bound"
+  - id: R5_flow_range
+    expr: "0 <= flow <= 15"
+    scope: flows
+    source: "flow meter operating range"
+
+direction_rules:
+  - when_rule_fails: R2_pump_flow_consistency
+    forbid_actions: [set_pump_speed]
+    rationale: "increasing pump output while pump/flow consistency already fails is unsafe"
+  - when_rule_fails: R3_valve_flow_consistency
+    forbid_actions: [open_valve, close_valve]
+    rationale: "valve/flow inconsistency demands verification before valve changes"
+
+severity_score_map:            # window score → incident severity
+  critical: 6.0
+  high: 3.0
+  medium: 1.5
