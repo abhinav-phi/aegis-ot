@@ -1,0 +1,27 @@
+# MITRE ATT&CK for ICS rule table (TINTEL-01, R16: real technique IDs only).
+rules:
+  - id: sensor_zeroing_high_flow
+    technique: T0862
+    name: Supply Pump Compromise
+    confidence: 0.6
+    when:
+      top_sensor_prefix: LIT
+      invariant_failed: R2_pump_flow_consistency
+  - id: pump_speed_anomaly
+    technique: T0846
+    name: Process Manipulation
+    confidence: 0.55
+    when:
+      top_sensor_prefix: P1
+  - id: flow_inconsistency
+    technique: T0875
+    name: Unauthorized Command Message
+    confidence: 0.5
+    when:
+      invariant_failed: R3_valve_flow_consistency
+  - id: level_rate_violation
+    technique: T0838
+    name: Unauthorized Stop
+    confidence: 0.45
+    when:
+      invariant_failed: R4_level_rate_limit
