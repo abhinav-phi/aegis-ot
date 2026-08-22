@@ -1,0 +1,17 @@
+# Frozen feature manifest (R-ML-05): shared by Isolation Forest AND TCN-AE.
+window:
+  W: 60          # samples per window (1 Hz)
+  stride: 1
+sensors:
+  - FIT101
+  - LIT101
+  - P101_STATE
+  - AIT502
+per_window_stats: [mean, std, min, max]   # IF feature vector layout
+splits:                                    # temporal fractions (no shuffle)
+  train: 0.6
+  validation: 0.2
+  test: 0.2
+threshold_quantile: 0.99                   # τ = p99 of validation GT-normal scores
+attribution_epsilon: 1.0e-12               # R-ML-07
+low_confidence_residual_floor: 1.0e-9

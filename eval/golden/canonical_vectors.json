@@ -1,0 +1,40 @@
+{
+  "spec": "AEGIS-OT JCS-subset canonicalization (see app/core/canonical.py docstring)",
+  "vectors": [
+    {
+      "name": "key_order",
+      "input": "{\"b\": 2, \"a\": 1}",
+      "canonical": "{\"a\":1,\"b\":2}"
+    },
+    {
+      "name": "int_float_collapse",
+      "input": "{\"x\": 1.0, \"y\": 1}",
+      "canonical": "{\"x\":1,\"y\":1}"
+    },
+    {
+      "name": "exponent_zeros",
+      "input": "{\"a\": 1e-7, \"b\": 1e+21, \"c\": 0.5}",
+      "canonical": "{\"a\":1e-7,\"b\":1e+21,\"c\":0.5}"
+    },
+    {
+      "name": "unicode_nfc",
+      "input": "{\"s\": \"e\\u0301\"}",
+      "canonical": "{\"s\":\"é\"}"
+    },
+    {
+      "name": "nested_sorting",
+      "input": "{\"l\": [{\"z\": true, \"a\": null}, {}], \"d\": {\"k\": [1, 2, 3]}}",
+      "canonical": "{\"d\":{\"k\":[1,2,3]},\"l\":[{\"a\":null,\"z\":true},{}]}"
+    },
+    {
+      "name": "string_escaping",
+      "input": "{\"t\": \"a\\\"b\\\\c\\n\\u0001\"}",
+      "canonical": "{\"t\":\"a\\\"b\\\\c\\n\\u0001\"}"
+    },
+    {
+      "name": "bools_and_null",
+      "input": "{\"t\": true, \"f\": false, \"n\": null}",
+      "canonical": "{\"f\":false,\"n\":null,\"t\":true}"
+    }
+  ]
+}

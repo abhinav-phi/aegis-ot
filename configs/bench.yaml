@@ -1,0 +1,8 @@
+# Reference machine for NFR verification (R-ML-12). Record actual hardware
+# used for reported benchmarks here.
+reference_machine: "lab workstation (record CPU model, cores, RAM in results env)"
+detection_inference_target_ms: 200   # per 60-sample window, CPU (NFR-02)
+dashboard_load_target_s: 2           # NFR-01
+rag_retrieval_target_ms: 150
+llm_plan_typical_s: 60
+full_matrix_budget_min: 90
