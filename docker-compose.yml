@@ -1,0 +1,112 @@
+version: "3.9"
+
+networks:
+  internal:
+    internal: true
+  appnet:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aegis
+      POSTGRES_PASSWORD: aegis
+      POSTGRES_DB: aegis_ot
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegis -d aegis_ot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal, appnet]
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: aegis
+      MINIO_ROOT_PASSWORD: aegis-secret
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["miniodata:/data"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal, appnet]
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports: ["8000:8000"]
+    volumes: ["chromadata:/chroma/chroma"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/heartbeat || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal, appnet]
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: ["ollamadata:/root/.ollama"]
+    networks: [internal, appnet]
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db
+    ports: ["5001:5001"]
+    networks: [internal, appnet]
+
+  app:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://aegis:aegis@postgres:5432/aegis_ot
+      MINIO_ENDPOINT: minio:9000
+      CHROMA_HOST: chroma
+      OLLAMA_HOST: http://ollama:11434
+      MLFLOW_TRACKING_URI: http://mlflow:5001
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      minio: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    networks: [internal, appnet]
+
+  worker:
+    build: .
+    command: python -m app.workers.main
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://aegis:aegis@postgres:5432/aegis_ot
+      MINIO_ENDPOINT: minio:9000
+      CHROMA_HOST: chroma
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      app: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://app:8000/health/worker')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [internal, appnet]
+
+  frontend:
+    build: ./frontend
+    command: nginx -g "daemon off;"
+    ports: ["5173:80"]
+    depends_on: [app]
+    networks: [appnet]
+
+volumes:
+  pgdata:
+  miniodata:
+  chromadata:
+  ollamadata:
