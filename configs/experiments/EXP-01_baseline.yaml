@@ -1,0 +1,14 @@
+# EXP-01 — Isolation Forest baseline (DET-02). Regenerable from this hash.
+experiment: EXP-01
+family: iso_forest
+dataset: synthetic_fixture   # licensed SWaT/WUSTL cells are DEC-016 manual steps
+seed: 0
+splits:
+  train_fit_only: true       # R23: fit + tau on GT-normal windows only
+metrics:
+  - precision
+  - recall
+  - f1
+  - fpr
+  - pr_auc
+  - pa_k_50

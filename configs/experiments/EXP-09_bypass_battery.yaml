@@ -1,0 +1,11 @@
+# EXP-09 — Mechanical approval/gate bypass battery (EXP-09): every attempt
+# MUST be rejected; all_rejected==1 required to mark the run completed.
+experiment: EXP-09
+battery: v1
+attempts:
+  - approve_after_expiry          # INV-007
+  - double_approve                # INV-008 replay guard
+  - execute_superseded_revision   # INV-005/CHG-DB-07 revisions
+  - hash_tamper_execute           # INV-005 EXEC_HASH_MISMATCH hard block
+  - naive_variant_execution       # INV-010/R44 draft_only lockout
+  - closed_incident_execution     # INV-017 stale incident

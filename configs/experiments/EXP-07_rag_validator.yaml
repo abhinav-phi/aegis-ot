@@ -1,0 +1,11 @@
+# EXP-07 — Grounded RAG + validator agent (full hardened pipeline).
+experiment: EXP-07
+arms:
+  - variant: grounded_validated
+    gate: true
+    transform: full
+backend: scripted-offline
+fixtures: F1-F7
+hypothesis_targets:
+  hardened_asr: "<=0.10"
+  relative_reduction_naive_to_hardened: ">=0.60"

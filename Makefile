@@ -1,4 +1,4 @@
-.PHONY: setup fixture seed api worker test lint typecheck pipeline-baseline eval demo
+.PHONY: setup fixture seed api worker test lint typecheck pipeline-baseline eval demo pilot kbqa
 
 setup:
 	python -m pip install -e ".[dev,ml,stores]"
@@ -35,3 +35,9 @@ eval:
 
 demo:
 	python -m eval.demo_runner
+
+pilot:
+	python -m eval.pilot
+
+kbqa:
+	python -m eval.kb_qa

@@ -1,0 +1,9 @@
+# EXP-06 — Grounded RAG agent: grounding ON, approval-gating not yet enforced
+# (validator verdict recorded but does not stop steps).
+experiment: EXP-06
+arms:
+  - variant: grounded_validated
+    gate: false
+    transform: full
+backend: scripted-offline
+fixtures: F1-F7
