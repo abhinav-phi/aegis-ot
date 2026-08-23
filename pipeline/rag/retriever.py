@@ -37,21 +37,27 @@ def retrieve(db: Session | None, *, query: str, mode: str = "production",
     """
     allow = set(MODE_ALLOWLIST.get(mode, MODE_ALLOWLIST["production"]))
     tiers = [t for t in (requested_tiers or list(allow)) if t in allow]
+    # Denials are recorded on EVERY outcome path — even when retrieval itself
+    # is unavailable — so a hostile request can never pass silently (INV-012).
     denied = bool(set(requested_tiers or []) - allow)
-    collection = PROD_COLLECTION if mode == "production" else f"aegis_kb_eval"
+    collection = PROD_COLLECTION if mode == "production" else "aegis_kb_eval"
 
-    started = dt.datetime.now(dt.timezone.utc)
+    started = dt.datetime.now(dt.UTC)
     try:
         store = get_vector_store()
         records = store.query(collection, query, k=k, where_tiers=tiers or None)
     except FileNotFoundError as e:
+        result = {"status": RETRIEVAL_UNAVAILABLE, "citations": [], "evidence": [],
+                  "flag": "TIER_DENIED" if denied else str(e)}
         _record_event(db, agent_run_id, collection, query, [], [], "retrieval_unavailable", started)
-        return {"status": RETRIEVAL_UNAVAILABLE, "citations": [], "evidence": [],
-                "flag": str(e)}
+        return result
     except Exception as e:  # any backend failure degrades, never fabricates
         log.warning("rag.backend_failure", exc_info=e)
+        result = {"status": RETRIEVAL_UNAVAILABLE, "citations": [], "evidence": []}
+        if denied:
+            result["flag"] = "TIER_DENIED"
         _record_event(db, agent_run_id, collection, query, [], [], "retrieval_unavailable", started)
-        return {"status": RETRIEVAL_UNAVAILABLE, "citations": [], "evidence": []}
+        return result
 
     # DB-backed citation identity + stale-version metadata.
     citations, evidence = [], []
@@ -86,7 +92,7 @@ def retrieve(db: Session | None, *, query: str, mode: str = "production",
 def _record_event(db, agent_run_id, collection, query, chunk_ids, tiers, status, started) -> None:
     if db is None:
         return
-    latency = int((dt.datetime.now(dt.timezone.utc) - started).total_seconds() * 1000)
+    latency = int((dt.datetime.now(dt.UTC) - started).total_seconds() * 1000)
     db.add(RetrievalEvent(
         agent_run_id=agent_run_id, collection=collection,
         query_hash=content_hash(query), query_text=query[:2000],

@@ -70,6 +70,12 @@ def evaluate_invariants(window: dict) -> dict:
             break
 
     failed = [r["rule_id"] for r in results if not r["pass"]]
+    # Attach each result to its declarative definition (R35: knobs live in
+    # configs; THREAT-04: every check maps to its documented source).
+    for r in results:
+        meta = rules.get(r["rule_id"]) or {}
+        r["expr"] = meta.get("expr")
+        r["source"] = meta.get("source")
     return {"checks": results, "failed": failed, "all_pass": not failed}
 
 
@@ -77,7 +83,7 @@ def failed_rules_for_incident(db, incident) -> list[str]:
     """Best-effort invariant outcomes attached to the incident (C5 input)."""
     if incident is None:
         return []
-    from app.db.models import AnomalyExplanation, Anomaly
+    from app.db.models import Anomaly, AnomalyExplanation
 
     rows = db.execute(
         select(AnomalyExplanation.invariant_checks)
@@ -93,4 +99,4 @@ def failed_rules_for_incident(db, incident) -> list[str]:
     return sorted(failed)
 
 
-from sqlalchemy import select  # noqa: E402
+from sqlalchemy import select

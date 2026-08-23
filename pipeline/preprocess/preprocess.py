@@ -30,7 +30,7 @@ class Scaler:
         self.std = std or {}
 
     @classmethod
-    def fit(cls, df: pd.DataFrame, sensors: list[str]) -> "Scaler":
+    def fit(cls, df: pd.DataFrame, sensors: list[str]) -> Scaler:
         mean = {c: float(df[c].mean()) for c in sensors}
         std = {c: float(df[c].std(ddof=0) or 1.0) for c in sensors}
         std = {c: (s if s > 0 else 1.0) for c, s in std.items()}
@@ -45,7 +45,7 @@ class Scaler:
         return {"mean": self.mean, "std": self.std}
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Scaler":
+    def from_dict(cls, d: dict) -> Scaler:
         return cls(mean=d.get("mean") or {}, std=d.get("std") or {})
 
 
