@@ -10,10 +10,16 @@ import numpy as np
 
 
 def _triangular_membership(x: np.ndarray, centers: np.ndarray, width: float) -> np.ndarray:
+    """Per-sample fuzzy memberships against triangular partition centers.
+
+    Accepts x shaped [N] or [N, F] (F>1 collapses by mean); returns [N, C].
+    """
+    x = np.asarray(x, dtype=float)
     if x.ndim == 1:
         x = x[:, None]
-    d = np.abs(x[:, None, :] - centers[None, :, :])
-    return np.clip(1.0 - d / width, 0.0, 1.0)  # [N, C]
+    vals = x[:, 0] if x.shape[1] == 1 else x.mean(axis=1)  # [N]
+    d = np.abs(vals[:, None] - centers[None, :])           # [N, C]
+    return np.clip(1.0 - d / width, 0.0, 1.0)
 
 
 def _fuzzy_lower_approx(mu_B: np.ndarray, decision: np.ndarray) -> np.ndarray:

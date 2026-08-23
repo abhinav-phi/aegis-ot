@@ -8,7 +8,7 @@ are never mistaken for model measurements.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
@@ -145,7 +145,7 @@ def run_attack_suite(db: Session, *, created_by=None) -> dict:
                      value=float(relative_reduction)))
 
     run.status = "completed"
-    run.completed_at = datetime.now(timezone.utc)
+    run.completed_at = datetime.now(UTC)
     db.flush()
     return {"evaluation_run_id": str(run.id), **summary,
             "relative_reduction": relative_reduction, "cases": len(FIXTURES)}

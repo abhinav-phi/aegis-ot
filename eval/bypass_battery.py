@@ -44,10 +44,9 @@ def build_attempts(db: Session, seed: dict) -> list[Attempt]:
     # 1. Approve after expiry.
     def approve_expired(session):
         a = session.get(ApprovalRequest, seed["approval"])
-        a.expires_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=1)
+        a.expires_at = dt.datetime.now(dt.UTC) - dt.timedelta(seconds=1)
         session.flush()
         from app.core.security import Principal
-
         from app.services.approval_service import approve as svc_approve
 
         svc_approve(session, approval_id=a.id, approver=Principal(str(a.requested_by or "u"), "analyst"))
@@ -56,7 +55,6 @@ def build_attempts(db: Session, seed: dict) -> list[Attempt]:
     # 2. Double approve (already approved).
     def double_approve(session):
         from app.core.security import Principal
-
         from app.services.approval_service import approve as svc_approve
 
         svc_approve(session, approval_id=seed["approval"],

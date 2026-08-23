@@ -150,14 +150,19 @@ def grounding_rate(claims: list[dict]) -> float:
 
 
 def attribution_consistency(family_slot_sets: list[list[str]]) -> float:
-    """1 − mean pairwise normalized template-slot edit distance (XAI-03)."""
+    """1 − mean pairwise normalized template-slot edit distance (XAI-03).
+
+    Distance is normalized by the LONGER JOINED STRING length so the score is
+    bounded to [0, 1] (the previous list-length denominator let the ratio
+    exceed 1 and produced negative consistency values).
+    """
     if len(family_slot_sets) < 2:
         return 1.0
     dists = []
     for i in range(len(family_slot_sets)):
         for j in range(i + 1, len(family_slot_sets)):
-            a, b = family_slot_sets[i], family_slot_sets[j]
-            d = _levenshtein(" ".join(a), " ".join(b))
+            a, b = " ".join(family_slot_sets[i]), " ".join(family_slot_sets[j])
+            d = _levenshtein(a, b)
             dists.append(d / max(1, max(len(a), len(b))))
     return 1.0 - float(np.mean(dists))
 
