@@ -15,7 +15,6 @@ from app.core.security import (
     REFRESH_COOKIE,
     clear_refresh_cookie,
     create_access_token,
-    hash_password,
     limiter,
     new_refresh_token,
     set_refresh_cookie,
@@ -26,7 +25,7 @@ from app.services.audit import audit
 
 
 def _utcnow() -> dt.datetime:
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(dt.UTC)
 
 
 def login(db: Session, response: Response, *, email: str, password: str,
@@ -44,9 +43,9 @@ def login(db: Session, response: Response, *, email: str, password: str,
             limiter.record_failure(key)
             audit(db, actor_id=None, action="auth.login_failed", entity_type="user",
                   ip_address=ip)
-        raise AuthError("invalid_credentials")
+        raise AuthError("invalid_credentials", code="invalid_credentials")
     if not user.is_active:
-        raise AuthError("invalid_credentials")
+        raise AuthError("invalid_credentials", code="invalid_credentials")
 
     raw, token_hash = new_refresh_token()
     family = str(uuid.uuid4())
@@ -65,7 +64,7 @@ def login(db: Session, response: Response, *, email: str, password: str,
 
 def refresh(db: Session, response: Response, raw_token: str | None) -> dict:
     if not raw_token:
-        raise AuthError("missing_refresh_token")
+        raise AuthError("missing_refresh_token", code="missing_refresh_token")
     token_hash = __import__("hashlib").sha256(raw_token.encode()).hexdigest()
     row = db.execute(
         select(RefreshToken).where(RefreshToken.token_hash == token_hash)
@@ -81,13 +80,13 @@ def refresh(db: Session, response: Response, raw_token: str | None) -> dict:
         audit(db, actor_id=row.user_id, action="auth.refresh_reuse_detected",
               entity_type="refresh_family", entity_id=row.family,
               after={"revoked_family": row.family})
-        raise AuthError("invalid_refresh_token")
+        raise AuthError("invalid_refresh_token", code="invalid_refresh_token")
     if row is None or row.expires_at < _utcnow():
-        raise AuthError("invalid_refresh_token")
+        raise AuthError("invalid_refresh_token", code="invalid_refresh_token")
 
     user = db.get(User, row.user_id)
     if user is None or not user.is_active:
-        raise AuthError("invalid_refresh_token")
+        raise AuthError("invalid_refresh_token", code="invalid_refresh_token")
 
     new_raw, new_hash = new_refresh_token()
     db.add(RefreshToken(

@@ -8,8 +8,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.auth import health_router, router as auth_router, users_router
-from app.api.data import audit_router, demo_router, eval_router, router as data_router
+from app.api.auth import health_router, users_router
+from app.api.auth import router as auth_router
+from app.api.data import audit_router, demo_router, eval_router
+from app.api.data import router as data_router
 from app.api.operations import router as ops_router
 from app.core.exceptions import AegisError
 from app.core.logging import configure_logging, get_logger, request_id_ctx

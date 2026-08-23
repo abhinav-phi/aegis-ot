@@ -6,9 +6,13 @@ class AegisError(Exception):
     status_code = 500
     code = "internal_error"
 
-    def __init__(self, message: str = "", *, details: dict | None = None):
+    def __init__(self, message: str = "", *, details: dict | None = None,
+                 code: str | None = None):
         super().__init__(message or self.code)
         self.details = details or {}
+        if code:
+            # Machine-readable refinement (e.g. AUTH-07 invalid_credentials).
+            self.code = code
 
 
 class ConflictError(AegisError):

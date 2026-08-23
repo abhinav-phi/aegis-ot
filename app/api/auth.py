@@ -157,6 +157,6 @@ def worker_health():
     hb = Path(".worker_heartbeat")
     alive = False
     if hb.exists():
-        age = dt.datetime.now(dt.timezone.utc).timestamp() - hb.stat().st_mtime
+        age = dt.datetime.now(dt.UTC).timestamp() - hb.stat().st_mtime
         alive = age < 60
     return {"worker_alive": alive}
