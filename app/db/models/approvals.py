@@ -34,6 +34,6 @@ class ApprovalRequest(Base):
     decision_reason: Mapped[str | None] = mapped_column(Text)
     expires_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
     decided_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))

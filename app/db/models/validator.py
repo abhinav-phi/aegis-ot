@@ -14,7 +14,6 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
-    Double,
     ForeignKey,
     LargeBinary,
     String,
@@ -49,7 +48,7 @@ class MitigationPlan(Base):
         ForeignKey("validator_results.id", use_alter=True)
     )
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -66,7 +65,7 @@ class ValidatorResult(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)  # CHG-DB-08
     detail: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 

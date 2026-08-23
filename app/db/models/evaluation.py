@@ -35,7 +35,7 @@ class EvaluationRun(Base):
     notes: Mapped[str | None] = mapped_column(Text)
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
     completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -56,7 +56,7 @@ class MetricRow(Base):
     value: Mapped[float] = mapped_column(Double, nullable=False)
     extra: Mapped[dict | None] = mapped_column(json_col())
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -81,7 +81,7 @@ class ChannelReduction(Base):
     config_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     metrics: Mapped[dict] = mapped_column(json_col(), nullable=False, default=dict)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -108,7 +108,7 @@ class InjectionCase(Base):
     refusal: Mapped[bool] = mapped_column(nullable=False, default=False)
     extra: Mapped[dict | None] = mapped_column(json_col())
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -127,7 +127,7 @@ class AuditLog(Base):
     request_id: Mapped[str] = mapped_column(String(64), nullable=False, default="-")
     ip_address: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 

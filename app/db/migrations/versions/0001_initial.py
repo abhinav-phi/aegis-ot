@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from alembic import op
 
-from app.db.models.base import Base
 import app.db.models  # noqa: F401
+from app.db.models.base import Base
 
 revision = "0001_initial"
 down_revision = None

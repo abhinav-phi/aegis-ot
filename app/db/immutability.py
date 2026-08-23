@@ -19,7 +19,7 @@ def register_immutability_listeners() -> None:
     from app.db.models.validator import MitigationPlan
 
     @event.listens_for(MitigationPlan, "before_update")
-    def _protect_plan(mapper, connection, target):  # noqa: ANN001
+    def _protect_plan(mapper, connection, target):
         state = target._sa_instance_state
         for attr in PROTECTED_PLAN_COLUMNS:
             hist = state.attrs[attr].history

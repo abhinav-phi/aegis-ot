@@ -40,7 +40,7 @@ class AgentRun(Base):
     lease_until: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     started_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
     ended_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -58,7 +58,7 @@ class AgentMessage(Base):
     payload: Mapped[dict] = mapped_column(json_col(), nullable=False)
     step_no: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
