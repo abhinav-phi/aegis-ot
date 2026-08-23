@@ -10,7 +10,7 @@ from app.services.approval_service import approve, deny
 
 
 def test_approve_after_expiry_rejected(db, scenario):
-    scenario["approval"].expires_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=1)
+    scenario["approval"].expires_at = dt.datetime.now(dt.UTC) - dt.timedelta(seconds=1)
     db.flush()
     with pytest.raises(ConflictError, match="expired"):
         approve(db, approval_id=scenario["approval"].id, approver=scenario["admin"])
@@ -53,8 +53,9 @@ def test_self_approval_for_control_forbidden(db, users):
     db.add(plan)
     db.flush()
     validate_plan_revision(db, plan=plan)
-    from app.db.models import ApprovalRequest
     from sqlalchemy import select
+
+    from app.db.models import ApprovalRequest
 
     approval = db.execute(select(ApprovalRequest).where(
         ApprovalRequest.plan_id == plan.id)).scalar_one()

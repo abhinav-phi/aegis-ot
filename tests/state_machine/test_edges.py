@@ -5,7 +5,7 @@ import pytest
 
 from app.core.exceptions import ConflictError
 from app.services.approval_service import approve, deny
-from app.services.state import incident_transition, plan_transition
+from app.services.state import incident_transition
 
 
 def test_valid_edges_open_to_analyzing(db, scenario):
@@ -59,14 +59,16 @@ def test_escalation_resolution(db, scenario):
 
 def test_simulating_failure_escalates(db, scenario):
     """Sandbox step failure ⇒ plan+incident escalate (§11)."""
-    from app.core.canonical import steps_hash
     from app.db.models import MitigationPlan
 
     approve(db, approval_id=scenario["approval"].id, approver=scenario["admin"])
-    plan = scenario["plan"]
-    # Force a step the plant model cannot apply (unknown tank) while keeping
-    # the validator/approval chain intact via a fresh validated revision.
-    steps = [{"step_no": 1, "action": "set_tank_setpoint", "target": "T-999",
+    # Force a step the surrogate cannot apply while keeping the
+    # validator/approval chain intact via a fresh validated revision.
+    # T-601 is IN the C2 grammar (configs/policy/actions.yaml) but has no
+    # setpoint actuator in the 6-stage surrogate ⇒ validator passes, sandbox
+    # fails ⇒ §11 escalation. (An unregistered target like T-999 would be
+    # blocked earlier by C2 and never reach the sandbox.)
+    steps = [{"step_no": 1, "action": "set_tank_setpoint", "target": "T-601",
               "params": {"level_pct": 10.0}, "citations": ["ev-trusted"]}]
     from app.services.approval_service import amend
 
@@ -74,8 +76,9 @@ def test_simulating_failure_escalates(db, scenario):
                 approver=scenario["analyst"],
                 steps_patch=steps)
     new_plan = db.get(MitigationPlan, res["new_plan_id"])
-    from app.db.models import ApprovalRequest
     from sqlalchemy import select
+
+    from app.db.models import ApprovalRequest
 
     appr = db.execute(select(ApprovalRequest).where(
         ApprovalRequest.plan_id == new_plan.id)).scalar_one()

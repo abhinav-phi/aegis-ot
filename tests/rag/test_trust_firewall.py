@@ -1,8 +1,6 @@
 """RAG trust firewall tests (DEC-010, INV-012)."""
 from __future__ import annotations
 
-import pytest
-
 from pipeline.rag.retriever import MODE_ALLOWLIST, NO_EVIDENCE, RETRIEVAL_UNAVAILABLE
 
 
@@ -23,11 +21,10 @@ def test_retriever_denies_hostile_in_production(db, monkeypatch):
     monkeypatch.setattr(s, "vector_store", "local")
     monkeypatch.setattr(s, "local_vector_root", ".test-vectors")
 
-    from pathlib import Path
 
+    import pipeline.rag.retriever as retriever_mod
     from pipeline.rag.kb import build_eval_fixture_kb
     from pipeline.rag.vectorstore import LocalVectorStore
-    import pipeline.rag.retriever as retriever_mod
 
     store = LocalVectorStore(".test-vectors")
     monkeypatch.setattr(retriever_mod, "get_vector_store", lambda: store)

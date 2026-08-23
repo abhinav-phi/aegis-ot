@@ -39,8 +39,9 @@ def test_naive_plan_cannot_be_approved(db, scenario, users):
     plan = _naive_plan(db, scenario, users)
     validate_plan_revision(db, plan=plan)  # runs, but status stays draft_only
     assert plan.status == "draft_only"
-    from app.db.models import ApprovalRequest
     from sqlalchemy import select
+
+    from app.db.models import ApprovalRequest
 
     rows = db.execute(select(ApprovalRequest).where(
         ApprovalRequest.plan_id == plan.id)).scalars().all()

@@ -13,10 +13,9 @@ def test_exp08_suite_runs_and_hardened_beats_naive(db):
 
 
 def test_exp09_battery_all_attempts_rejected(db, scenario):
-    from eval.experiments import run_exp09
-
     # Pre-amend so the 'execute_superseded_revision' attempt is meaningful.
     from app.services.approval_service import amend
+    from eval.experiments import run_exp09
 
     amend(db, approval_id=scenario["approval"].id, approver=scenario["analyst"],
           steps_patch=[{"step_no": 1, "params": {"level_pct": 70.0}}])

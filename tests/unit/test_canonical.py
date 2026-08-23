@@ -19,7 +19,6 @@ def test_hash_changes_with_content():
 
 
 def test_nan_rejected_in_canonical():
-    import math
 
     with pytest.raises(ValueError):
         canonical_bytes({"v": float("nan")})

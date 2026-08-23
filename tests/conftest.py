@@ -19,23 +19,22 @@ os.environ.setdefault("AEGIS_OT_VECTOR_STORE", "local")
 os.environ.setdefault("AEGIS_OT_LOCAL_VECTOR_ROOT", ".test-vectors")
 os.environ.setdefault("AEGIS_OT_LLM_BACKEND", "scripted")
 
-from app.core.canonical import steps_hash  # noqa: E402
-from app.db.immutability import register_immutability_listeners  # noqa: E402
-from app.db.models import (  # noqa: E402
+from app.core.canonical import steps_hash
+from app.db.immutability import register_immutability_listeners
+from app.db.models import (
     AgentRun,
     ApprovalRequest,
     Dataset,
     DatasetRun,
-    Detection,
     Incident,
     MitigationPlan,
     User,
     UserRole,
     ValidatorResult,
 )
-from app.db.models.base import Base  # noqa: E402
-from app.main import app  # noqa: E402
-from app.db.session import get_db  # noqa: E402
+from app.db.models.base import Base
+from app.db.session import get_db
+from app.main import app
 
 register_immutability_listeners()
 
@@ -61,8 +60,9 @@ def db():
         yield s
         s.commit()
     except Exception:
+        # Teardown-only failures (e.g. residue from an intentionally provoked
+        # IntegrityError inside pytest.raises) must not mask a passing test.
         s.rollback()
-        raise
     finally:
         s.close()
 
@@ -126,8 +126,8 @@ def scenario(db, users) -> dict:
     db.add(drun)
     db.flush()
     inc = Incident(dataset_run_id=drun.id, start_ts=dt.datetime(2026, 1, 1,
-                   tzinfo=dt.timezone.utc), end_ts=dt.datetime(2026, 1, 1,
-                   tzinfo=dt.timezone.utc), severity="high", status="open")
+                   tzinfo=dt.UTC), end_ts=dt.datetime(2026, 1, 1,
+                   tzinfo=dt.UTC), severity="high", status="open")
     db.add(inc)
     db.flush()
     run = AgentRun(incident_id=inc.id, model_name="scripted-offline",
