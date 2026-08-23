@@ -37,7 +37,7 @@ def _decode_layer(text: str) -> list[str]:
             try:
                 padded = token + "=" * (-len(token) % 4)
                 candidates.append(base64.b64decode(padded, validate=True).decode("utf-8"))
-            except Exception:
+            except Exception:  # noqa: S110 — non-decodable tokens are skipped by design
                 pass
         candidates += [m.group(0) for m in re.finditer(r"%[0-9a-fA-F]{2}(?:%[0-9a-fA-F]{2}){4,}", current)]
         decoded = []

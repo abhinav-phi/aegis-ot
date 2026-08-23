@@ -28,7 +28,7 @@ class ConsistencyResult:
 
 def load_direction_rules(path: str | Path = "configs/invariants.yaml") -> list[dict]:
     raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-    return list((raw.get("direction_rules") or []))
+    return list(raw.get("direction_rules") or [])
 
 
 def check_consistency(

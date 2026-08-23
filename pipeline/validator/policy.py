@@ -103,9 +103,9 @@ def check_allowlist(registry: PolicyRegistry, step: dict) -> tuple[bool, str]:
     spec = registry.get(action)
     if spec is None:
         return False, f"unregistered_action:{action}"
-    if "*" not in spec.targets and target not in spec.targets:
-        if not any(t.endswith("*") and target.startswith(t[:-1]) for t in spec.targets):
-            return False, f"target_not_allowed:{action}:{target}"
+    if "*" not in spec.targets and target not in spec.targets and \
+            not any(t.endswith("*") and target.startswith(t[:-1]) for t in spec.targets):
+        return False, f"target_not_allowed:{action}:{target}"
     params = step.get("params")
     if not isinstance(params, dict):
         return False, "params must be an object"
@@ -144,9 +144,9 @@ def check_plan_composition(registry: PolicyRegistry, steps: list[dict]) -> dict:
     ]
     order_conflicts = []
     for first, then in registry.required_order:
-        if first in present and then in present:
-            if actions_in_order.index(then) < actions_in_order.index(first):
-                order_conflicts.append((first, then))
+        if first in present and then in present and \
+                actions_in_order.index(then) < actions_in_order.index(first):
+            order_conflicts.append((first, then))
     return {"combination_blocks": combination_blocks,
             "order_conflicts": order_conflicts}
 

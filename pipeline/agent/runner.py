@@ -30,8 +30,7 @@ def run_agent(db: Session, *, run_id, incident_id, dataset_run_id, variant: str,
     llm = get_llm()
     max_steps = get_settings().agent_max_steps
     ctx = ToolContext(db=db, incident_id=str(incident_id),
-                      dataset_run_id=str(dataset_run_id),
-                      mode=mode if variant == "naive" else mode)
+                      dataset_run_id=str(dataset_run_id), mode=mode)
     system = SYSTEM_NAIVE if variant == "naive" else SYSTEM_GROUNDED
 
     def record(role: str, payload: dict, tool_name: str | None = None) -> None:
@@ -96,11 +95,13 @@ def run_agent(db: Session, *, run_id, incident_id, dataset_run_id, variant: str,
     elif step_limit_reached:
         record("assistant", {"marker": "STEP_LIMIT_REACHED", "final": final_text})
 
-    ended = dt.datetime.now(dt.timezone.utc)
-    agent_run_transition(db, run_id, "running", status,
-                         extra={"ended_at": ended, "lease_until": None})
+    ended = dt.datetime.now(dt.UTC)
+    # Final transcript entry MUST land while the run is still `running` —
+    # AGENT-001 rejects writes after the completion transition below.
     record("assistant", {"final": final_text, "step_limit_reached": step_limit_reached,
                          "variant": variant})
+    agent_run_transition(db, run_id, "running", status,
+                         extra={"ended_at": ended, "lease_until": None})
     return {"run_id": str(run_id), "status": status, "plan_id": plan_id,
             "steps": step_no, "step_limit_reached": step_limit_reached}
 
@@ -120,8 +121,16 @@ def _materialize_draft(db: Session, *, run_id, incident_id, variant, proposed,
     steps = [dict(s) for s in proposed]
     h = steps_hash(steps)
     run = db.get(AgentRun, run_id)
+    # Revisions are per agent run: never collide with an existing revision
+    # (UNIQUE(agent_run_id, revision_no)); amendments continue the chain.
+    latest = db.execute(
+        select(MitigationPlan.revision_no)
+        .where(MitigationPlan.agent_run_id == run_id)
+        .order_by(MitigationPlan.revision_no.desc()).limit(1)
+    ).scalar_one_or_none()
     plan = MitigationPlan(
-        incident_id=incident_id, agent_run_id=run_id, revision_no=1,
+        incident_id=incident_id, agent_run_id=run_id,
+        revision_no=(latest or 0) + 1,
         steps=steps, steps_hash=h,
         canonical_bytes=canonical_bytes(steps),          # HASH-001
         revision_created_by=run.created_by if run else None,  # SEC-002
