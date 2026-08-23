@@ -11,7 +11,6 @@ from app.db.models import AgentRun, Incident
 from app.services import audit as audit_svc
 from app.services.state import incident_transition
 
-
 # AGENT-001 lease parameters — derived, not arbitrary:
 # worst-case step = LLM timeout 90 s × 1 retry + tool budget ⇒ TTL ≥ 2× step.
 LEASE_TTL_S = 300
@@ -19,14 +18,17 @@ HEARTBEAT_S = 100  # ≤ TTL/3 so a live worker always outlives the reaper windo
 
 
 def _utcnow() -> dt.datetime:
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(dt.UTC)
 
 
 def create_and_start_run(db: Session, *, incident: Incident, variant: str,
                          actor_id, ip: str | None = None) -> AgentRun:
     from pipeline.agent.runner import create_run
 
-    if incident.status not in ("open", "rejected"):
+    # INV-015: ≤1 active run per incident — enforced below AND by the DB
+    # partial unique index. Re-entry from `analyzing` is permitted only when
+    # no active run exists (e.g. naive→hardened comparison arms, AppFlow §4).
+    if incident.status not in ("open", "rejected", "analyzing"):
         raise ConflictError(f"cannot_start_run_from_{incident.status}")
 
     active = db.execute(

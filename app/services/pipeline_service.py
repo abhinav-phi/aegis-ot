@@ -6,7 +6,6 @@ import datetime as dt
 import json
 
 import numpy as np
-import pandas as pd
 import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -73,14 +72,14 @@ def preprocess_dataset(db: Session, *, dataset_id, actor_id=None) -> list[Datase
             store.put(feat_key, _pack(windows))
             store.put(stats_key, json.dumps(scaler.to_dict()).encode())
             run.feature_manifest = {
-                "blocks": [{"key": feat_key, "n_windows": int(len(windows)),
+                "blocks": [{"key": feat_key, "n_windows": len(windows),
                             "W": W, "stride": stride,
                             "sensor_order": ds.sensor_columns,
                             "row_range": [start, end]}],
                 "stats_key": stats_key,
                 "sha256": sha256_bytes(_pack(windows)),
             }
-            run.rows = int(len(cleaned))
+            run.rows = len(cleaned)
             run.normalization_stats = scaler.to_dict()
             run.verified_hashes = {"features_sha256": run.feature_manifest["sha256"],
                                    "source_dataset_sha256": ds.sha256}
@@ -112,7 +111,7 @@ def load_feature_blocks(store, run: DatasetRun):
     arr = _unpack(store.get(block["key"]))
     starts = window_starts((0, block["row_range"][1] - block["row_range"][0]),
                            block["W"], block["stride"])
-    ts0 = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+    ts0 = dt.datetime(2026, 1, 1, tzinfo=dt.UTC)
     timestamps = [ts0 + dt.timedelta(seconds=i) for i in starts]
     return arr, timestamps, block
 
@@ -147,6 +146,19 @@ def train_detector(db: Session, *, validation_run_id, family: str,
     )
     db.add(mv)
     db.flush()
+    # R20: every training run is mirrored to MLflow (fail-open telemetry).
+    from app.core.mlflow_bridge import log_training_run
+
+    mlflow_ok = log_training_run(
+        run_name=mv.name,
+        params={"family": family, "seed": seed, "dataset_run": str(val_run.id),
+                "config_hash": mv.config_hash},
+        metrics={"threshold_tau": float(tau),
+                 "val_score_mean": float(scores.mean()),
+                 "val_windows": len(val_windows)},
+        artifact_bytes=artifact, artifact_name="checkpoint.bin",
+    )
+    mv.metrics_summary = {**mv.metrics_summary, "mlflow_logged": mlflow_ok}
     audit(db, actor_id=actor_id, action="model.registered",
           entity_type="model_versions", entity_id=mv.id,
           after={"tau": tau, "artifact_sha256": mv.artifact_sha256})
@@ -163,7 +175,7 @@ def run_detection(db: Session, *, dataset_run_id, model_version_id,
     verify_hash(store, mv.checkpoint_path, mv.artifact_sha256,
                 bucket="aegis-artifacts")  # INV-016
 
-    windows, timestamps, block = load_feature_blocks(store, run)
+    windows, timestamps, _block = load_feature_blocks(store, run)
     from pipeline.detect.iso_forest import IsoForestDetector
 
     detector = IsoForestDetector.load_bytes(store.get(mv.checkpoint_path,
@@ -258,7 +270,8 @@ def map_threats(db: Session, incident_id) -> list[ThreatMapping]:
 
 
 def _severity(score: float) -> str:
-    inv = yaml.safe_load(open("configs/invariants.yaml", encoding="utf-8"))
+    with open("configs/invariants.yaml", encoding="utf-8") as f:
+        inv = yaml.safe_load(f)
     sev = "low"
     for name, floor in inv.get("severity_score_map", {}).items():
         if score >= floor:
