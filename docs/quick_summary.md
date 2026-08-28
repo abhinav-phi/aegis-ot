@@ -156,11 +156,11 @@ approval service, validator, sandbox, agent runner, RAG core, pipeline libraries
 evaluation framework, API, workers, React dashboard, 32-case attack suite, docs updated.
 
 **Verified (Step 8 hardening complete, 2026-08-23):**
-- Test suite: **78 passed · 0 failed · 2 skipped (intentional) · 0 errors** — the
+- Test suite: **106 passed · 0 failed · 2 skipped (intentional) · 0 errors** (Step 9 added 28 tests: KB corpus guards, hallucination probe, experiment-config presence; Step 8 baseline was 78) — the
   Step-7 fixture bug that blocked 26 security tests is fixed; all seven defect
   clusters (verdict ordering, KB imports, retriever typing, TS build errors,
   amend-kwarg mismatch, TCN-AE shape bugs, demo idempotency) are resolved.
-  Full evidence table: Tracker.md "Step 8".
+  Full evidence table: Tracker.md "Step 8" + "Step 9".
 - Frontend `tsc && vite build` clean (TypeScript strict).
 - EXP-01..09 + STRESS-ROB + RAG-04 corpus run executed offline on the committed
   synthetic mini-fixture (licensed SWaT cells remain a documented manual step).
