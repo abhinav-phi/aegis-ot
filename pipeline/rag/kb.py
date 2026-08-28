@@ -31,11 +31,48 @@ def _parse_doc(path: Path) -> dict:
     return {"meta": meta, "text": text}
 
 
+def _collection_present(store, collection: str) -> bool:
+    try:
+        store.query(collection, "probe", k=1)
+        return True
+    except FileNotFoundError:
+        return False
+
+
+def _reindex_from_db(db: Session, store, collection: str) -> None:
+    """Re-seed a wiped vector collection from DB rows (idempotent, INV-016).
+
+    build_kb is DB-idempotent: on a re-run it skips documents whose
+    doc_hash already exists, so if the vector collection was removed
+    (e.g. store wiped between runs) it would otherwise never be rebuilt.
+    """
+    from sqlalchemy import select
+
+    rows = db.execute(
+        select(RagChunk, RagDocument)
+        .join(RagDocument, RagChunk.document_id == RagDocument.id)
+        .where(RagDocument.collection == collection)
+    ).all()
+    if not rows:
+        return
+    ids, texts, metas = [], [], []
+    for chunk, doc in rows:
+        ids.append(chunk.chroma_id)
+        texts.append(chunk.chunk_text)
+        metas.append({"tier": doc.tier, "source": doc.source,
+                      "section": chunk.section, "doc_key": doc.source,
+                      "chunk_db_id": str(chunk.id),
+                      "fields": {}})
+    store.upsert(collection, ids, texts, metas)
+
+
 def build_kb(db: Session, *, collection: str = PROD_COLLECTION,
              root: Path = Path("configs/kb")) -> int:
     if collection != PROD_COLLECTION:
         raise ValueError("build_kb is production-only; hostile fixtures use the eval builder")
     store = get_vector_store()
+    if not _collection_present(store, collection):
+        _reindex_from_db(db, store, collection)
     count = 0
     for md in sorted(Path(root).glob("**/*.md")):
         parsed = _parse_doc(md)

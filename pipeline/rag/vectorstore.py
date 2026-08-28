@@ -6,6 +6,7 @@ boundary — the retriever additionally hard-filters tiers.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -37,11 +38,36 @@ class LocalVectorStore:
                metadatas: list[dict]) -> None:
         emb = get_embedder()
         vectors = emb.embed(texts)
-        store = {"ids": ids, "texts": texts, "metas": metadatas}
-        np.save(self._dir(collection) / "vectors.npy", vectors)
-        import json
-
-        (self._dir(collection) / "store.json").write_text(
+        d = self._dir(collection)
+        vec_file, store_file = d / "vectors.npy", d / "store.json"
+        if vec_file.exists() and store_file.exists():
+            # Merge semantics: existing ids are kept as-is (first write wins),
+            # new ids are appended. Matches the Chroma adapter's upsert and
+            # makes multi-call builders (build_kb upserts per document) safe.
+            old_vectors = np.load(vec_file)
+            old_store = json.loads(store_file.read_text(encoding="utf-8"))
+            seen = set(old_store["ids"])
+            merged_ids = list(old_store["ids"])
+            merged_texts = list(old_store["texts"])
+            merged_metas = list(old_store["metas"])
+            new_vecs: list[np.ndarray] = []
+            for cid, text, meta, vec in zip(ids, texts, metadatas, vectors):
+                if cid in seen:
+                    continue
+                seen.add(cid)
+                merged_ids.append(cid)
+                merged_texts.append(text)
+                merged_metas.append(meta)
+                new_vecs.append(vec)
+            if not new_vecs:
+                return
+            vectors = np.vstack([old_vectors, np.asarray(new_vecs, dtype=np.float32)])
+            store = {"ids": merged_ids, "texts": merged_texts,
+                     "metas": merged_metas}
+        else:
+            store = {"ids": ids, "texts": texts, "metas": metadatas}
+        np.save(d / "vectors.npy", vectors)
+        (d / "store.json").write_text(
             json.dumps(store, ensure_ascii=False), encoding="utf-8"
         )
 
