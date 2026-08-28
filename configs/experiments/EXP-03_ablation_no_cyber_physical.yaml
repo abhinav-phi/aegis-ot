@@ -1,0 +1,8 @@
+# EXP-03 — Ablation: cyber-physical context removed (R28 fixed variant).
+experiment: EXP-03
+arms:
+  - variant: grounded_validated
+    gate: true
+    transform: no_cp_context
+backend: scripted-offline
+fixtures: F1-F7
