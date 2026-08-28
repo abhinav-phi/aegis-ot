@@ -8,13 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
-import os
 from pathlib import Path
 
-from sqlalchemy import select, text, update
+from sqlalchemy import select
 
 from app.core.logging import configure_logging, get_logger
-from app.db.models import AgentRun, ApprovalRequest, Incident, MitigationPlan
+from app.db.models import ApprovalRequest, Incident, MitigationPlan
 from app.db.session import SessionLocal
 from app.services import audit as audit_svc
 
@@ -23,7 +22,7 @@ HEARTBEAT = Path(".worker_heartbeat")
 
 
 def _utcnow() -> dt.datetime:
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(dt.UTC)
 
 
 def _heartbeat() -> None:
