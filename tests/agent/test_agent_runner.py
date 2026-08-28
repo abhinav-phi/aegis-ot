@@ -1,11 +1,8 @@
 """Agent runner tests: max-step forced finalize + draft materialization."""
 from __future__ import annotations
 
-import pytest
-
 
 def test_naive_draft_gets_draft_only_status(db, scenario, users):
-    from app.core.canonical import steps_hash
     from app.db.models import MitigationPlan
     from pipeline.agent.runner import _materialize_draft
     from pipeline.validator.engine import EvidenceIndex

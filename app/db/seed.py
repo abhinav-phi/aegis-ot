@@ -5,14 +5,13 @@ Idempotent. Required before first use outside dev (config.validate_safety).
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.core.security import hash_password
-from app.db.models import Dataset, RagDocument, User, UserRole
+from app.db.models import Dataset, User, UserRole
 from app.db.session import SessionLocal
 
 
@@ -41,10 +40,10 @@ def seed_primary_dataset(db) -> None:
 
     fixture = Path("data/fixtures/swat_mini.csv")
     if not fixture.exists():
-        from pipeline.ingest.synthetic import generate_fixture_csv
+        from pipeline.ingest.synthetic import to_csv_bytes
 
         fixture.parent.mkdir(parents=True, exist_ok=True)
-        fixture.write_text(generate_fixture_csv(), encoding="utf-8")
+        fixture.write_bytes(to_csv_bytes())
     sha = hashlib.sha256(fixture.read_bytes()).hexdigest()
     existing = db.execute(select(Dataset).where(Dataset.key == "synthetic")).scalar_one_or_none()
     if existing:

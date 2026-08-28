@@ -64,7 +64,6 @@ def validate_plan(
     for idx, step in enumerate(ordered):
         no = int(step.get("step_no", 0))
         action = str(step.get("action", ""))
-        is_last_of_action = action not in [str(s.get("action")) for s in ordered[idx + 1:]]
 
         ok, detail = c24mod.check_allowlist(registry, step)
         # Combination blocks attach to the LAST occurrence of the offending pair.

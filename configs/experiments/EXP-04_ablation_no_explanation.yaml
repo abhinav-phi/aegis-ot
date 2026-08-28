@@ -1,0 +1,12 @@
+# EXP-04 — Ablation pair: explanation pathway detached (XAI-01/-02 evidence
+# removed from agent context; R28 fixed variants).
+experiment: EXP-04
+arms:
+  - variant: grounded_validated
+    gate: true
+    transform: no_cp_context
+  - variant: naive
+    gate: false
+    transform: no_cp_context
+backend: scripted-offline
+fixtures: F1-F7

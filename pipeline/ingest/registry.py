@@ -26,7 +26,8 @@ def ingest_dataset(db: Session, *, key: str, source_path: str,
     if key not in DATASET_KEYS:
         raise ValidationFailed(f"unknown_dataset_key:{key}")
     try:
-        raw = open(source_path, "rb").read()
+        with open(source_path, "rb") as fh:
+            raw = fh.read()
     except OSError as e:
         raise ValidationFailed(f"source_unreadable:{e}") from e
 

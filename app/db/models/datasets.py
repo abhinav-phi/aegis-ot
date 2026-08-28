@@ -42,7 +42,7 @@ class Dataset(Base):
     primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -69,7 +69,7 @@ class DatasetRun(Base):
     error: Mapped[str | None] = mapped_column(Text)
     verified_hashes: Mapped[dict] = mapped_column(json_col(), nullable=False, default=dict)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 

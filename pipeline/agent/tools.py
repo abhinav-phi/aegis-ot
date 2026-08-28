@@ -91,7 +91,7 @@ class ToolContext:
         ev = self._register(tier="trusted", source="tool:check_invariant",
                             fields={"failed_rules": outcomes["failed"]})
         return {**outcomes, "evidence_ids": [ev],
-                "checked_at": dt.datetime.now(dt.timezone.utc).isoformat()}
+                "checked_at": dt.datetime.now(dt.UTC).isoformat()}
 
     # -- proposal -----------------------------------------------------------------
     def propose_action(self, args: dict) -> dict:

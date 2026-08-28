@@ -50,4 +50,4 @@ def coerce_uuid_columns() -> None:
 
 
 def now_col():
-    return DateTime(timezone=True), {"default": lambda: dt.datetime.now(dt.timezone.utc)}
+    return DateTime(timezone=True), {"default": lambda: dt.datetime.now(dt.UTC)}

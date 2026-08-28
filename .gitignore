@@ -20,3 +20,5 @@ evals/
 venv/
 test_run.ps1
 command_run.md
+aegis_ot.egg-info/
+.test-vectors/

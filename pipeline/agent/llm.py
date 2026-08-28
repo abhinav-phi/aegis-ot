@@ -40,8 +40,8 @@ class OllamaClient:
         return _parse_decision(content)
 
 
-_UNSAFE_SET = re.compile(r"set\s+(P-\d+)\s+(?:to|at)\s+(\d+(?:\.\d+)?)\s*%", re.I)
-_UNSAFE_VALVE = re.compile(r"(?:close|shut(?:down)?|open)\s+(MV-\d+)", re.I)
+_UNSAFE_SET = re.compile(r"set\s+(P-\d+)\s+(?:to|at)\s+(\d+(?:\.\d+)?)\s*%", re.IGNORECASE)
+_UNSAFE_VALVE = re.compile(r"(?:close|shut(?:down)?|open)\s+(MV-\d+)", re.IGNORECASE)
 
 
 class ScriptedClient:
@@ -77,7 +77,7 @@ class ScriptedClient:
 
         if "spd-017" in lowered and "grounded" in system:
             ev_id = None
-            m = re.search(r"\[(ev-[0-9a-f\-]+)\].*SPD-017", transcript, re.I | re.S)
+            m = re.search(r"\[(ev-[0-9a-f\-]+)\].*SPD-017", transcript, re.IGNORECASE | re.DOTALL)
             if m:
                 ev_id = m.group(1)
             return LLMDecision(

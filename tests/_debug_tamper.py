@@ -1,22 +1,30 @@
 import os
+
 os.environ.setdefault("AEGIS_OT_ENV", "dev")
 
 from tests.conftest import *  # noqa
 from tests.conftest import engine, TestingSession  # noqa
-import pytest
 from sqlalchemy import text
 
 from app.services.approval_service import approve
-from pipeline.sandbox.simulator import execute_plan, _verify_binding
+from pipeline.sandbox.simulator import execute_plan
 
 
 def test_debug_tamper(db, users):
-    from tests.conftest import make_evidence_index  # noqa: F401
+    import datetime as dt
+
     # build scenario manually via fixture logic
     from app.core.canonical import steps_hash
-    from app.db.models import AgentRun, ApprovalRequest, Dataset, DatasetRun, Incident, MitigationPlan
-    import datetime as dt
+    from app.db.models import (
+        AgentRun,
+        ApprovalRequest,
+        Dataset,
+        DatasetRun,
+        Incident,
+        MitigationPlan,
+    )
     from app.services.validator_service import validate_plan_revision
+    from tests.conftest import make_evidence_index  # noqa: F401
 
     ds = Dataset(key="synthetic", display_name="t", sha256="0" * 64,
                  sensor_columns=["FIT101", "LIT101"])
@@ -25,8 +33,8 @@ def test_debug_tamper(db, users):
                       split_role="train", minio_root="x/", status="completed")
     db.add(drun); db.flush()
     inc = Incident(dataset_run_id=drun.id,
-                   start_ts=dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc),
-                   end_ts=dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc),
+                   start_ts=dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
+                   end_ts=dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
                    severity="high", status="open")
     db.add(inc); db.flush()
     run = AgentRun(config_hash="t", incident_id=inc.id, model_name="s",

@@ -35,7 +35,7 @@ def generate_arrays(n_rows: int = 720, attack_start: int = 500,
 
 
 def timestamps(n_rows: int, start: str = "2026-01-01T00:00:00Z") -> list[str]:
-    base = dt.datetime.fromisoformat(start.replace("Z", "+00:00"))
+    base = dt.datetime.fromisoformat(start)  # py311+ parses the Z suffix
     return [(base + dt.timedelta(seconds=i)).isoformat() for i in range(n_rows)]
 
 

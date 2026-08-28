@@ -1,0 +1,19 @@
+# EXP-02 — Proposed TCN-AE detector (DET-01/03). Torch-optional: if torch is
+# absent the cell records an honest skipped run (R15 — no fabricated numbers).
+experiment: EXP-02
+family: tcn_ae
+dataset: synthetic_fixture
+seed: 0
+train:
+  epochs: 30
+  batch: 64
+  lr: 0.001
+attribution: per_channel_residual   # R18: never attention weights
+metrics:
+  - precision
+  - recall
+  - f1
+  - fpr
+  - pr_auc
+  - pa_k_50
+  - inference_ms_per_window

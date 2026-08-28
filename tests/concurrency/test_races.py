@@ -25,9 +25,13 @@ def test_execute_without_approval_rejected(db, scenario):
 
 
 def test_duplicate_active_agent_run_blocked(db, scenario, users):
+    from sqlalchemy.exc import IntegrityError
+
     from app.db.models import AgentRun
 
-    with pytest.raises(Exception):
+    # INV-015 is enforced at the DB level by the partial unique index; assert
+    # the specific integrity violation rather than a blind Exception.
+    with pytest.raises(IntegrityError):
         AgentRun(config_hash="t", incident_id=scenario["incident"].id, model_name="x",
                  variant="grounded", status="running")
         db.add(AgentRun(config_hash="t", incident_id=scenario["incident"].id, model_name="x",

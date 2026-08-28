@@ -8,7 +8,6 @@ from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, Uniqu
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.models.base import Base, json_col
-from app.db.models.enums import TIERS
 
 
 class RagDocument(Base):
@@ -24,7 +23,7 @@ class RagDocument(Base):
     superseded: Mapped[bool] = mapped_column(nullable=False, default=False)
     collection: Mapped[str] = mapped_column(String(64), nullable=False, default="aegis_kb_prod")
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -43,7 +42,7 @@ class RagChunk(Base):
     chunk_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -63,5 +62,5 @@ class RetrievalEvent(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="ok")
     latency_ms: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )

@@ -14,8 +14,8 @@ def build_explanation(*, top_sensors: list[dict], invariant_checks: list[dict],
     names = ", ".join(s["sensor"] for s in top_sensors[:3]) or "n/a"
     failed = [c["rule_id"] for c in invariant_checks if not c.get("pass", True)]
     parts = [
-        f"HYPOTHESIS (not a verdict): anomaly window at {window_start} scored "
-        f"{score:.3f} (threshold {threshold:.3f}).",
+        (f"HYPOTHESIS (not a verdict): anomaly window at {window_start} scored "
+         f"{score:.3f} (threshold {threshold:.3f})."),
         f"Attribution: dominant channels {names}.",
     ]
     if low_confidence:

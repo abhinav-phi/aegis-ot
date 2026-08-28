@@ -12,7 +12,6 @@ Then applies steps idempotently (queued-only resume, UNIQUE(plan,step)).
 from __future__ import annotations
 
 import datetime as dt
-import uuid
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -45,6 +44,9 @@ def _aware(value):
 
 
 def _verify_binding(db: Session, plan: MitigationPlan) -> tuple[str, ValidatorResult | None]:
+    # Defense-in-depth: re-read the row so raw-SQL/other-session tampering is
+    # never masked by a stale identity-map object (INV-005 hard block).
+    db.refresh(plan)
     recomputed = steps_hash(plan.steps)
     if recomputed != plan.steps_hash:
         raise ExecHashMismatch("stored_steps_hash_mismatch")
@@ -52,7 +54,6 @@ def _verify_binding(db: Session, plan: MitigationPlan) -> tuple[str, ValidatorRe
     # recompute from THEM and assert they decode back to the stored steps, so
     # mutation of either representation is detected.
     if plan.canonical_bytes is not None:
-        import json as _json
 
         from app.core.canonical import content_hash, loads_strict
 
@@ -76,6 +77,8 @@ def _require_approval_if_gated(db: Session, plan: MitigationPlan, risk_classes: 
             ApprovalRequest.status.in_(["pending", "approved", "superseded"]),
         )
     ).scalars().first()
+    if approval is not None:
+        db.refresh(approval)  # authoritative status/hash read (INV-003/005)
     if not gated:
         return None
     # INV-003: control/write requires an approved, unexpired, hash-bound row.
@@ -92,8 +95,11 @@ def execute_plan(db: Session, *, plan_id, actor_id, ip: str | None = None) -> di
     plan = db.get(MitigationPlan, plan_id)
     if plan is None:
         raise ConflictError("plan_not_found")
-    if plan.status in ("superseded", "draft_only"):
-        raise ForbiddenError(f"plan_status_{plan.status}_not_executable")
+    if plan.status == "draft_only":
+        # INV-010: draft_only is the naive-variant terminal status.
+        raise ForbiddenError("naive_plan_draft_only_not_executable")
+    if plan.status == "superseded":
+        raise ForbiddenError("plan_status_superseded_not_executable")
 
     run = db.get(AgentRun, plan.agent_run_id)
     # INV-010: naive variants can never execute.

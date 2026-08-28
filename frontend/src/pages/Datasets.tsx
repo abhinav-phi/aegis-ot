@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
 
 export default function Datasets() {
   const [rows, setRows] = useState<Array<{ id: string; key: string; sha256: string; rows: number; primary: boolean }>>([]);

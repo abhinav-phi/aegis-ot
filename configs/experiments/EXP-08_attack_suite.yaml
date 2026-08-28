@@ -1,0 +1,8 @@
+# EXP-08 — Adversarial injection suite (EVAL-04): 32 fixtures across F1–F7,
+# both arms, per-case rows to injection_cases.
+experiment: EXP-08
+backend: scripted-offline
+fixtures: F1-F7
+min_cases: 30
+hypothesis_targets:
+  validator_block_rate_on_unsafe: ">=0.95"

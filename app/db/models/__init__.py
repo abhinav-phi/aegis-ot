@@ -1,6 +1,7 @@
 """Model re-exports."""
 from app.db.models.agent import AgentMessage, AgentRun
 from app.db.models.approvals import ApprovalRequest
+from app.db.models.base import coerce_uuid_columns
 from app.db.models.datasets import Dataset, DatasetRun
 from app.db.models.evaluation import (
     AuditLog,
@@ -15,7 +16,6 @@ from app.db.models.pipeline import Anomaly, AnomalyExplanation, Detection, Model
 from app.db.models.rag import RagChunk, RagDocument, RetrievalEvent
 from app.db.models.sandbox import SimulatedAction
 from app.db.models.validator import MitigationPlan, ValidatorResult
-from app.db.models.base import coerce_uuid_columns
 
 coerce_uuid_columns()
 

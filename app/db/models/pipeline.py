@@ -45,7 +45,7 @@ class ModelVersion(Base):
     metrics_summary: Mapped[dict | None] = mapped_column(json_col())
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -71,7 +71,7 @@ class Detection(Base):
     ground_truth: Mapped[bool | None] = mapped_column()
     latency_ms: Mapped[int | None] = mapped_column(Integer)  # DET-05
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -91,7 +91,7 @@ class Anomaly(Base):
     top_sensors: Mapped[list] = mapped_column(json_col(), nullable=False, default=list)
     low_confidence: Mapped[bool] = mapped_column(nullable=False, default=False)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 Anomaly.__table__.append_constraint(
@@ -110,5 +110,5 @@ class AnomalyExplanation(Base):
     invariant_checks: Mapped[list] = mapped_column(json_col(), nullable=False, default=list)
     consistency_score: Mapped[float | None] = mapped_column(Double)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )

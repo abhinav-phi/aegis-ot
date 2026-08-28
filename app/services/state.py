@@ -23,15 +23,17 @@ def transition(
     status_column: str = "status",
     entity_name: str = "",
 ) -> int:
-    table = model.__table__
     values = {status_column: to_status, **(extra_values or {})}
     rc = (
         db.query(model)
         .filter(
-            getattr(model, "id") == entity_id,
+            model.id == entity_id,
             getattr(model, status_column) == from_status,
         )
-        .update(values, synchronize_session=False)
+        # "evaluate" keeps the single conditional UPDATE race semantics while
+        # also synchronizing in-session objects; "False" left stale identity-map
+        # rows that later reads (tests + services in the same tx) observed.
+        .update(values, synchronize_session="evaluate")
     )
     if rc == 0:
         raise ConflictError(

@@ -17,7 +17,6 @@ from app.core.canonical import steps_hash
 from app.core.config import get_settings
 from app.db.models import (
     AgentRun,
-    Anomaly,
     ApprovalRequest,
     Incident,
     MitigationPlan,
@@ -43,8 +42,8 @@ def build_evidence_index(db: Session, run_id) -> EvidenceIndex:
             candidates.append(payload["evidence"])
         if result:
             candidates.append(result)
-        for evd in result.get("evidence", []) if isinstance(result, dict) else []:
-            candidates.append(evd)
+        candidates.extend(
+            result.get("evidence", []) if isinstance(result, dict) else [])
         for c in candidates:
             eid = c.get("validator_evidence_id") or c.get("evidence_id")
             if not eid:
@@ -119,7 +118,11 @@ def validate_plan_revision(db: Session, *, plan: MitigationPlan,
     db.flush()
     plan.active_validator_result_id = vr.id
 
-    if plan.status == "draft_for_validation":
+    # INV-010 / R44: naive variants are recorded but stay locked to draft_only;
+    # no status advance and no approval request may ever be created.
+    naive_locked = run is not None and run.variant == "naive"
+
+    if plan.status == "draft_for_validation" and not naive_locked:
         new_status = {
             "allow": "validated",
             "require_approval": "validated",
@@ -141,7 +144,7 @@ def validate_plan_revision(db: Session, *, plan: MitigationPlan,
 
             incident_transition(db, incident.id, "analyzing", "escalated")
 
-    if outcome.verdict == "require_approval":
+    if outcome.verdict == "require_approval" and not naive_locked:
         _create_approval(db, plan=plan, plan_hash=h, requested_by=run.created_by
                          if run else None)
 
@@ -163,7 +166,7 @@ def _create_approval(db: Session, *, plan: MitigationPlan, plan_hash: str,
     approval = ApprovalRequest(
         plan_id=plan.id, plan_hash=plan_hash, status="pending",
         requested_by=requested_by,
-        expires_at=dt.datetime.now(dt.timezone.utc)
+        expires_at=dt.datetime.now(dt.UTC)
         + dt.timedelta(hours=get_settings().approval_expiry_hours),
     )
     db.add(approval)

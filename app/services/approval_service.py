@@ -7,7 +7,7 @@ import datetime as dt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.canonical import canonical_bytes, steps_hash, short_hash
+from app.core.canonical import canonical_bytes, short_hash, steps_hash
 from app.core.config import get_settings
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.db.models import (
@@ -18,8 +18,7 @@ from app.db.models import (
     ValidatorResult,
 )
 from app.services import audit as audit_svc
-from app.services.state import approval_transition, incident_transition
-from pipeline.validator.policy import load_default_registry
+from app.services.state import agent_run_transition, approval_transition, incident_transition
 
 
 def _utcnow() -> dt.datetime:
@@ -50,9 +49,11 @@ def list_pending(db: Session) -> list[ApprovalRequest]:
 
 
 def _guards(db: Session, approval: ApprovalRequest,
-            plan_statuses: tuple[str, ...] = ("validated",)) -> tuple[MitigationPlan, ValidatorResult]:
-    # INV-007: pending + unexpired.
-    if approval.status != "pending":
+            plan_statuses: tuple[str, ...] = ("validated",),
+            approval_statuses: tuple[str, ...] = ("pending",)) -> tuple[MitigationPlan, ValidatorResult]:
+    # INV-007 (default): pending + unexpired. Amendment widens this to include
+    # already-approved revisions (DEC-002/§10: amend supersedes the decision).
+    if approval.status not in approval_statuses:
         raise ConflictError(f"approval_status_{approval.status}_not_actionable")
     if approval.expires_at is None or \
             _aware(approval.expires_at) <= _utcnow():
@@ -130,6 +131,12 @@ def deny(db: Session, *, approval_id, approver, reason: str,
     from app.services.state import plan_transition
 
     plan_transition(db, plan.id, "validated", "rejected")
+    # Free the single-active-run slot (INV-015): a denied draft ends its
+    # originating run so the incident can be retried (AppFlow §6).
+    originating = db.get(AgentRun, plan.agent_run_id) if plan.agent_run_id else None
+    if originating is not None and originating.status == "running":
+        agent_run_transition(db, originating.id, "running", "completed",
+                             extra={"ended_at": _utcnow()})
     incident = db.get(Incident, plan.incident_id)
     if incident is not None and incident.status == "awaiting_approval":
         incident_transition(db, incident.id, "awaiting_approval", "rejected")
@@ -139,13 +146,15 @@ def deny(db: Session, *, approval_id, approver, reason: str,
     return {"approval_id": str(approval.id), "status": "denied"}
 
 
-def amend(db: Session, *, approval_id, actor, steps_patch: list[dict],
+def amend(db: Session, *, approval_id, approver, steps_patch: list[dict],
           ip: str | None = None) -> dict:
     """DEC-002/§9: new immutable revision; old approval+validation voided;
     fresh C1–C5 runs synchronously before any execution can occur."""
     approval = get_approval_or_404(db, approval_id)
-    # Amendment permitted only from validated/approved revisions (audit §10).
-    plan, _vr = _guards(db, approval, plan_statuses=("validated", "approved"))
+    # Amendment permitted from validated AND approved revisions (DEC-002/§10):
+    # a fresh human decision supersedes any prior one in the same transaction.
+    plan, _vr = _guards(db, approval, plan_statuses=("validated", "approved"),
+                        approval_statuses=("pending", "approved"))
 
     by_no = {int(p.get("step_no", 0)): p for p in steps_patch}
     new_steps = []
@@ -177,23 +186,23 @@ def amend(db: Session, *, approval_id, actor, steps_patch: list[dict],
         revision_no=latest + 1, supersedes_id=plan.id,
         steps=new_steps, steps_hash=new_hash,
         canonical_bytes=canonical_bytes(new_steps),   # HASH-001
-        revision_created_by=actor.user_id,            # SEC-002 author binding
+        revision_created_by=approver.user_id,         # SEC-002 author binding
         status="draft_for_validation",
     )
     db.add(revision)
     db.flush()
 
-    # Invalidate everything derived from the old revision (same tx).
-    approval_transition(db, approval.id, "pending", "superseded")
+    # Invalidate everything derived from the old revision (same tx, R43).
+    approval_transition(db, approval.id, approval.status, "superseded")
     from app.services.state import plan_transition
 
-    plan_transition(db, plan.id, "validated", "superseded")
+    plan_transition(db, plan.id, plan.status, "superseded")
 
     from app.services.validator_service import validate_plan_revision
 
-    validate_plan_revision(db, plan=revision, actor_id=actor.user_id, ip=ip)
+    validate_plan_revision(db, plan=revision, actor_id=approver.user_id, ip=ip)
     db.refresh(revision)
-    audit_svc.audit(db, actor_id=actor.user_id, action="approval.amended",
+    audit_svc.audit(db, actor_id=approver.user_id, action="approval.amended",
                     entity_type="mitigation_plans", entity_id=revision.id,
                     before={"revision": plan.revision_no},
                     after={"revision": revision.revision_no}, ip_address=ip)

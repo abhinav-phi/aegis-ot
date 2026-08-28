@@ -34,7 +34,7 @@ class IsoForestDetector:
         return buf.getvalue()
 
     @classmethod
-    def load_bytes(cls, data: bytes) -> "IsoForestDetector":
+    def load_bytes(cls, data: bytes) -> IsoForestDetector:
         import io
         import pickle
 

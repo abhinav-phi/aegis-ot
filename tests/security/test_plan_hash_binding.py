@@ -2,21 +2,30 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import text
 
 from app.core.canonical import steps_hash
 from app.core.exceptions import ExecHashMismatch
-from app.services.approval_service import amend, approve, deny
+from app.services.approval_service import amend, approve
 
 
 def test_execute_after_raw_sql_hash_tamper_is_hard_blocked(db, scenario):
+    from sqlalchemy import update
+
+    from app.db.models import MitigationPlan
     from pipeline.sandbox.simulator import execute_plan
 
     approve(db, approval_id=scenario["approval"].id,
             approver=scenario["admin"])
-    # Bypass the ORM (simulating DB tamper): mutate stored steps only.
-    db.execute(text("UPDATE mitigation_plans SET steps = :s WHERE id = :i"),
-               {"s": "[]", "i": str(scenario["plan"].id)})
+    # Bypass the ORM identity map (simulating out-of-band DB tamper): mutate
+    # the stored row only. Core-level UPDATE + synchronize_session=False is
+    # portable (SQLite stores Uuid as hex; a hyphenated literal matches 0 rows)
+    # and leaves the session's cached object stale on purpose.
+    db.execute(
+        update(MitigationPlan)
+        .where(MitigationPlan.id == scenario["plan"].id)
+        .values(steps=[])
+        .execution_options(synchronize_session=False)
+    )
     db.flush()
     with pytest.raises(ExecHashMismatch):
         execute_plan(db, plan_id=scenario["plan"].id,
@@ -49,7 +58,6 @@ def test_amend_creates_new_revision_and_supersedes(db, scenario):
 
 
 def test_amend_noop_rejected(db, scenario):
-    import pydantic
 
     from app.core.exceptions import ConflictError
 

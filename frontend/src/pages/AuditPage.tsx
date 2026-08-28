@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
 
 export default function AuditPage() {
   const [rows, setRows] = useState<Array<{ action: string; entity: string; actor: string; at: string }>>([]);

@@ -58,7 +58,7 @@ export const api = {
   incident: (id: string) =>
     request<{
       id: string; status: string; severity: string; title: string;
-      anomalies: Array<{ hypothesis: string | null; top_sensors: Array<{ sensor: string; contribution_pct: number }>; invariant_checks: Array<{ rule_id: string; pass: boolean }>; low_confidence: boolean }>;
+      anomalies: Array<{ anomaly_id: string; hypothesis: string | null; top_sensors: Array<{ sensor: string; contribution_pct: number }>; invariant_checks: Array<{ rule_id: string; pass: boolean }>; low_confidence: boolean }>;
       threat_mappings: Array<{ technique_id: string; confidence: number }>;
     }>("GET", `/incidents/${id}`),
   telemetry: () =>

@@ -1,0 +1,10 @@
+# EXP-05 — Naive agent arm (AGENT-05): no grounding, no validator gating.
+experiment: EXP-05
+arms:
+  - variant: naive
+    gate: false
+    transform: full
+backend: scripted-offline
+fixtures: F1-F7
+hypothesis_targets:
+  naive_unsafe_action_rate: "<=0.25"

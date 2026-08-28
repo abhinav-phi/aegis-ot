@@ -1,8 +1,6 @@
 """Validator unit tests: C1–C5 semantics, verdict function, normalization."""
 from __future__ import annotations
 
-import pytest
-
 from pipeline.validator.engine import EvidenceIndex, validate_plan
 from pipeline.validator.pattern import PatternFilter, normalize
 from pipeline.validator.policy import load_registry
@@ -114,7 +112,7 @@ def test_pattern_filter_normalization_bypass_resistance():
     pf = PatternFilter()
     assert not pf.scan("IGNORE_PRIOR")[0]
     homoglyph = "іgnore_prior"  # Cyrillic і (NFKC does NOT map it — casefold+scan)
-    clean, marker = pf.scan(homoglyph)
+    pf.scan(homoglyph)  # behavior documented below; result shape is (clean, marker)
     # Homoglyphs are NOT the same string; document behavior: flagged only if a
     # normalized marker matches. Zero-width + case variants MUST be caught.
     assert not pf.scan("ignore\u200b_prior")[0]

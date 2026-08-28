@@ -42,6 +42,6 @@ class SimulatedAction(Base):
     simulated_effect: Mapped[dict | None] = mapped_column(json_col())
     error_detail: Mapped[str | None] = mapped_column(String(500))
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
     executed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))

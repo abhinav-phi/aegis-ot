@@ -1,0 +1,16 @@
+# STRESS-ROB — EVAL-02 stress protocol + ROB-01/02 fuzzy-rough channel
+# reduction arm. Both arms run the IDENTICAL seeded augmentations on TEST
+# only; mask is fit on TRAIN-normal windows exclusively (R23); reduction %
+# is measured (never assumed). Median across seeds (plan §2.4 risk note).
+experiment: STRESS-ROB
+stress_grid: configs/stress.yaml
+reduction:
+  method: fuzzy_rough_dependency
+  keep_threshold: 0.5
+seeds: [0]
+metrics_per_arm:
+  - median_f1_full
+  - median_f1_reduced
+  - f1_drop_full_vs_clean
+  - reduction_pct
+persistence: channel_reductions

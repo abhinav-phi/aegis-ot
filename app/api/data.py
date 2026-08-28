@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime as dt
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Request, UploadFile, File
+from fastapi import APIRouter, Depends, File, Request, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,10 +14,9 @@ from app.core.exceptions import ConflictError, ValidationFailed
 from app.core.security import Principal, current_principal, require_admin, require_analyst
 from app.db.models import (
     Dataset,
-    DatasetRun,
+    Detection,
     EvaluationRun,
     MetricRow,
-    ModelVersion,
 )
 from app.db.session import get_db
 from app.services import audit as audit_svc
@@ -55,7 +54,7 @@ def ingest(key: str, payload: IngestIn | None = None, file: UploadFile | None = 
     if file is not None:
         tmp_dir = Path(".uploads")
         tmp_dir.mkdir(exist_ok=True)
-        tmp_path = tmp_dir / f"{key}-{dt.datetime.now().timestamp():.0f}"
+        tmp_path = tmp_dir / f"{key}-{dt.datetime.now(dt.UTC).timestamp():.0f}"
         tmp_path.write_bytes(file.file.read())
         tmp = str(tmp_path)
     elif payload is not None:

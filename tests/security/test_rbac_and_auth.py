@@ -20,7 +20,10 @@ def test_login_success_sets_cookie_and_bearer(client, users):
 def test_login_wrong_password_generic_error(client, users):
     r = _login(client, "analyst@example.com", password="wrong-password-123")
     assert r.status_code == 401
-    assert r.json()["detail"]["code"] == "invalid_credentials"
+    # Uniform anti-enumeration semantics (AUTH-07): flat structured envelope.
+    assert r.json()["code"] == "invalid_credentials"
+    assert "invalid_credentials" in str(r.json()["detail"]) or \
+        r.json()["detail"] == "invalid_credentials"
 
 
 def test_viewer_cannot_approve(client, users):

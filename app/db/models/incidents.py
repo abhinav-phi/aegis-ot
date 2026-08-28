@@ -19,7 +19,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.models.base import Base, json_col
 from app.db.models.enums import INCIDENT_STATUSES, SEVERITIES, check_in
 
-
 _CLOSED_REASONS_SQL = "('resolved','no_action','escalated')"
 
 
@@ -45,7 +44,7 @@ class Incident(Base):
     closed_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))  # CHG-DB-06
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )
 
 
@@ -66,5 +65,5 @@ class ThreatMapping(Base):
     confidence: Mapped[float] = mapped_column(Double, nullable=False)
     basis: Mapped[dict] = mapped_column(json_col(), nullable=False, default=dict)
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.UTC)
     )

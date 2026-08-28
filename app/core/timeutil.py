@@ -9,12 +9,12 @@ import datetime as dt
 
 
 def utcnow() -> dt.datetime:
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(dt.UTC)
 
 
 def aware(value: dt.datetime | None) -> dt.datetime | None:
     if value is None:
         return None
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
     return value

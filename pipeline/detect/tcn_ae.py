@@ -45,9 +45,12 @@ def _build(n_sensors: int, W: int, channels: int = 32, latent: int = 8):
             )
 
         def forward(self, x):  # x: [B, S, T] -> reconstruct same shape
-            z = self.enc(x.transpose(1, 2))
+            # Conv1d consumes (B, C=S, T) directly — callers already deliver
+            # [B, S, T]; the previous extra transpose swapped S↔T and made
+            # every forward pass a channel-count mismatch.
+            z = self.enc(x)
             r = self.dec(z)
-            return r.transpose(1, 2)
+            return r
 
     return TCNAE()
 
@@ -95,9 +98,10 @@ class TCNAEDetector:
             raise ImportError("torch_not_installed")
         t = self.torch
         with t.no_grad():
-            x = t.tensor(windows.transpose(0, 2, 1), dtype=t.float32)
-            recon = self.net(x).numpy()
-        return np.abs(windows - recon.transpose(0, 2, 1)).mean(axis=1)  # [N, S]
+            x_np = windows.transpose(0, 2, 1)                     # [N,S,T]
+            x = t.tensor(x_np, dtype=t.float32)
+            recon = self.net(x).numpy()                           # [N,S,T]
+        return np.abs(x_np - recon).mean(axis=1)  # [N, S]
 
     def _fit_residual_scale(self, train_windows: np.ndarray) -> None:
         res = self._residuals(train_windows[:512])
@@ -123,7 +127,9 @@ class TCNAEDetector:
         return buf.getvalue()
 
     @classmethod
-    def load_bytes(cls, data: bytes) -> "TCNAEDetector":
+    def load_bytes(cls, data: bytes) -> TCNAEDetector:
+        import io
+
         if not TORCH_AVAILABLE:
             raise ImportError("torch_not_installed")
         buf = io.BytesIO(data)

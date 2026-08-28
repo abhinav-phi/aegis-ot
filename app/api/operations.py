@@ -126,9 +126,9 @@ def create_agent_run(incident_id: str, payload: AgentRunIn,
                                              ip=audit_context(request)["ip"])
     # Synchronous bounded execution (scripted backend ~instant; ollama runs
     # under lease so the reaper can interrupt stalls).
-    from pipeline.agent.runner import run_agent
-
     import datetime as _dt
+
+    from pipeline.agent.runner import run_agent
 
     try:
         run_agent(db, run_id=run.id, incident_id=inc.id,
@@ -136,7 +136,7 @@ def create_agent_run(incident_id: str, payload: AgentRunIn,
                   created_by=p.user_id)
     except Exception as exc:
         db.query(AgentRun).filter(AgentRun.id == run.id).update(
-            {"status": "error", "ended_at": _dt.datetime.now(_dt.timezone.utc)},
+            {"status": "error", "ended_at": _dt.datetime.now(_dt.UTC)},
             synchronize_session=False)
         audit(db, actor_id=p.user_id, action="agent.run_error",
               entity_type="agent_runs", entity_id=run.id,
@@ -230,6 +230,7 @@ def get_validator(plan_id: str, db: Session = Depends(get_db),
 def rerun_validator(plan_id: str, request: Request,
                     db: Session = Depends(get_db),
                     p: Principal = Depends(require_analyst)):
+    from app.db.models import MitigationPlan
     from app.services.validator_service import validate_plan_revision
 
     plan = db.get(MitigationPlan, plan_id)

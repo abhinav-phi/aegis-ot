@@ -46,7 +46,7 @@ def create_incidents_from_detections(db: Session, *, dataset_run_id,
             select(Incident).where(Incident.dataset_run_id == dataset_run_id)).scalars()
     }
     created: list[Incident] = []
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     for g in groups:
         if g[0].window_start in existing_starts:
             continue  # idempotent grouping on rerun
