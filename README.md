@@ -8,7 +8,7 @@
 ![PostgreSQL](https://img.shields.io/badge/storage-PostgreSQL%2016-336791)
 ![License](https://img.shields.io/badge/license-GPL--3.0-yellow)
 
-**Documentation** · [PRD](../1.%20PRD.md) · [TechSpec](../2.%20TechSpec.md) · [AppFlow](../3.%20AppFlow.md) · [Design](../4.%20Design.md) · [Schema](../5.%20Schema.md) · [Implementation Plan](../6.%20ImplementationPlan.md) · [Tracker](../7.%20Tracker.md) · [Rules](../8.%20Rules.md) · [Manual Setup](MANUAL_SETUP.md)
+**Documentation** · [PRD](docs/1.%20PRD.md) · [TechSpec](docs/2.%20TechSpec.md) · [AppFlow](docs/3.%20AppFlow.md) · [Design](docs/4.%20Design.md) · [Schema](docs/5.%20Schema.md) · [Implementation Plan](docs/6.%20ImplementationPlan.md) · [Tracker](docs/7.%20Tracker.md) · [Rules](docs/8.%20Rules.md) · [Manual Setup](MANUAL_SETUP.md)
 
 > ⚠️ **Safety boundary:** AEGIS-OT never connects to, reads from, or controls real SCADA/PLC/plant infrastructure. The pipeline's terminal executor is a pure-Python **sandbox simulator**; every simulated action is labeled `SIMULATED`. This is a research instrument, not a production product.
 
@@ -47,7 +47,7 @@ Status: the full pipeline, safety chain, evaluation framework, and dashboard are
 
 ## Features
 
-All claims below are backed by code and tests — see [Tracker](../7.%20Tracker.md) Step 8 record for evidence.
+All claims below are backed by code and tests — see [Tracker](docs/7.%20Tracker.md) Step 8 record for evidence.
 
 **Detection & explainability**
 - **Isolation Forest baseline** on frozen per-window statistics (`pipeline/detect/iso_forest.py`)
@@ -414,7 +414,7 @@ edit code → ruff check → pytest -q → (UI changes) npm run build → commit
 
 ## Roadmap
 
-From the live [Tracker](../7.%20Tracker.md):
+From the live [Tracker](docs/7.%20Tracker.md):
 
 - [x] Hardened backend: models/migrations, auth/RBAC, validator C1–C5, approvals, sandbox, audit
 - [x] Injection suite (32 cases, F1–F7) + bypass battery — offline green
