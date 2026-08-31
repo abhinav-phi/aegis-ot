@@ -50,3 +50,42 @@ def ensure_lite_schema() -> None:
 
     register_immutability_listeners()
     Base.metadata.create_all(engine)
+    _heal_sqlite_column_drift(engine)
+
+
+def _heal_sqlite_column_drift(engine) -> None:
+    """Self-heal a dev SQLite database created by an OLDER revision of the
+    models. `create_all` never adds columns to existing tables, so a stale
+    dev DB would crash ORM selects on newer models (e.g. a demo run on a DB
+    missing `mitigation_plans.canonical_bytes`). Heals by ALTER TABLE ADD
+    COLUMN for every model column missing from an existing table — only for
+    nullable columns (SQLite cannot backfill NOT NULL); anything else prints
+    guidance instead of corrupting the database.
+    """
+    from sqlalchemy import inspect, text
+
+    from app.db.models.base import Base
+
+    inspector = inspect(engine)
+    healed = 0
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if not inspector.has_table(table.name):
+                continue  # created just now by create_all
+            existing = {c["name"] for c in inspector.get_columns(table.name)}
+            for col in table.columns:
+                if col.name in existing:
+                    continue
+                if not col.nullable and col.default is None and col.server_default is None:
+                    print(f"lite-schema: {table.name}.{col.name} is missing and NOT NULL "
+                          f"without a default — delete the dev database and re-run "
+                          f"`make seed` (no safe in-place heal exists)")
+                    continue
+                ddl = f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" ' \
+                      f"{col.type.compile(engine.dialect)}"
+                conn.execute(text(ddl))
+                healed += 1
+                print(f"lite-schema: healed {table.name}.{col.name} "
+                      f"on {table.name} (schema drift from older revision)")
+    if healed:
+        print(f"lite-schema: {healed} column(s) healed")

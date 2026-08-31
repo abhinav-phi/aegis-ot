@@ -1,6 +1,7 @@
 """AEGIS-OT core configuration (Rules R6/R35). Secrets are server-side only."""
 from functools import lru_cache
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,7 +11,10 @@ class Settings(BaseSettings):
     env: str = "dev"
     secret_key: str = "change-me"
 
-    database_url: str = "sqlite:///./aegis_dev.db"
+    database_url: str = Field(
+        default="sqlite:///./aegis_dev.db",
+        validation_alias=AliasChoices("AEGIS_OT_DATABASE_URL", "DATABASE_URL"),
+    )
 
     object_store: str = "local"  # local | minio
     local_object_root: str = "./.objects"

@@ -59,7 +59,7 @@ AEGIS_OT_SECRET_KEY
 AEGIS_OT_ADMIN_EMAIL / AEGIS_OT_ADMIN_PASSWORD
 → What: bootstrap admin consumed by `python -m app.db.seed`
 → Why needed: first login + role administration (R14)
-→ Example format: admin@aegis.local / ≥12 characters
+→ Example format: admin@example.com / ≥12 characters
 → Required (enforced) whenever AEGIS_OT_ENV != dev
 
 DATABASE_URL
@@ -158,7 +158,7 @@ python -m app.db.migrate          # AUTOMATIC — alembic upgrade head (0001_ini
 
 python -m app.db.seed             # AUTOMATIC content, MANUAL prerequisite (.env admin vars)
 # Expected output:
-#   seed: created admin admin@aegis.local      (skipped if already present or vars unset)
+#   seed: created admin admin@example.com      (skipped if already present or vars unset)
 #   seed: registered synthetic fixture dataset
 #   seed: OK
 # Also AUTOMATIC: builds production KB corpus from configs/kb into the configured vector store.

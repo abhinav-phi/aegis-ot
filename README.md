@@ -270,7 +270,7 @@ curl http://localhost:8000/health
 # Login (bootstrap admin from seed)
 curl -X POST http://localhost:8000/auth/login `
   -H "Content-Type: application/json" `
-  -d '{"email":"admin@aegis.local","password":"change-me-admin-12ch"}'
+  -d '{"email":"admin@example.com","password":"change-me-admin-12ch"}'
 
 # Offline evaluation examples
 python -m eval.experiments --exp EXP-01 --dataset-run local   # IF baseline end-to-end
