@@ -1,0 +1,20 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 🛡️ Security Vulnerability
+    url: https://github.com/abhinav-phi/aegis-ot/security/advisories/new
+    about: >-
+      Report security vulnerabilities privately (validator bypasses, RAG
+      tier-escape, audit integrity, auth flaws). Never open a public issue.
+
+  - name: ❓ Question / Usage Help
+    url: https://github.com/abhinav-phi/aegis-ot/discussions
+    about: >-
+      Ask setup, architecture, or experiment questions in Discussions instead
+      of opening an issue.
+
+  - name: 📖 Documentation
+    url: https://github.com/abhinav-phi/aegis-ot#readme
+    about: >-
+      Start with the README, Manual Setup guide, and the docs/ folder (PRD,
+      TechSpec, Schema, Rules) before filing an issue.

@@ -2,6 +2,7 @@
 
 > Research-grade OT/ICS **decision-support** platform: attribute cyber-physical anomalies, ground an LLM incident-response agent in cited evidence, and gate every mitigation behind a deterministic C1–C5 validator, human approval, and a sandbox simulator.
 
+![CI](https://github.com/abhinav-phi/aegis-ot/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![FastAPI](https://img.shields.io/badge/backend-FastAPI-009688)
 ![React](https://img.shields.io/badge/frontend-React%2018%20%7C%20TS%20%7C%20Vite-61dafb)
@@ -43,7 +44,7 @@ OT/ICS defenders can detect anomalies faster than they can safely *respond* to t
 
 AEGIS-OT answers one research question (**RQ1**: *can an LLM incident-response agent be made trustworthy under adversarial inputs?*) with a measurable safety intervention: attribution-grounded explanations feed a single ReAct planner whose proposed mitigations must pass five deterministic validator checks (C1–C5), obtain **human approval bound to the exact plan hash**, and execute **only** inside a labeled plant simulator. An adversarial injection suite (families F1–F7) measures attack-surface reduction against a deliberately naive agent variant.
 
-Status: the full pipeline, safety chain, evaluation framework, and dashboard are implemented and verified offline on a committed synthetic mini-fixture (78 backend tests green, frontend builds clean). Licensed-dataset runs (SWaT/WUSTL-IIoT-2021) remain manual, hash-pinned steps — see [Manual Setup](MANUAL_SETUP.md).
+Status: the full pipeline, safety chain, evaluation framework, and dashboard are implemented and verified offline on a committed synthetic mini-fixture (106 backend tests green, frontend builds clean). SWaT detection runs from a public mirror of the testbed via `python -m pipeline.ingest.swat` (source files are gitignored; the built slice is SHA-256 pinned in the registry). WUSTL-IIoT-2021 remains a manual, license-gated step — see [Manual Setup](MANUAL_SETUP.md).
 
 ## Features
 
@@ -227,7 +228,7 @@ cd frontend; npm install; npm run dev         # terminal 3 — dashboard :5173
 Offline quick loop (no Docker at all — SQLite + filesystem stores + scripted LLM):
 
 ```powershell
-python -m pytest -q                              # full suite: 78 passed
+python -m pytest -q                              # full suite: 106 passed
 python -m eval.experiments --exp EXP-01 --dataset-run local
 python -m eval.demo_runner                       # Attack-the-Agent narrative
 ```
@@ -376,7 +377,7 @@ Reproducibility (EVAL-07): every run is keyed by `config_hash` over committed YA
 ## Running Tests
 
 ```powershell
-python -m pytest -q                                   # full suite — 78 passed, 2 intentional skips
+python -m pytest -q                                   # full suite — 106 passed, 2 intentional skips
 python -m pytest tests/security -q                    # RBAC, approval guards, hash binding, naive lockout
 python -m pytest tests/validator tests/unit -q        # C1–C5 golden tests + charter metrics
 python -m pytest tests/e2e tests/concurrency -q       # offline flows, race semantics
@@ -429,10 +430,14 @@ From the live [Tracker](docs/7.%20Tracker.md):
 
 ## Contributing
 
+Contributions are welcome — see [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the full guide (setup, style, PR process, and the safety-critical change review). Quick rules:
+
 1. Fork / branch: `git checkout -b feat/your-feature`
 2. Keep `python -m pytest -q` and `ruff check` green before pushing (R34/R37)
 3. One logical change per commit; conventional prefixes
 4. Never weaken invariant tests — they encode Rules.md §0
+
+PRs touching the safety chain must include the Safety Impact declaration from the [PR template](.github/pull_request_template.md). Security issues go through [SECURITY.md](.github/SECURITY.md) (private disclosure only — never a public issue). For questions, see [SUPPORT.md](.github/SUPPORT.md).
 
 ## License
 
