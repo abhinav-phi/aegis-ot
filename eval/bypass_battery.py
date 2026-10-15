@@ -10,7 +10,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.canonical import steps_hash
@@ -181,7 +181,7 @@ def run_bypass_battery(db: Session, seed: dict) -> list[dict]:
             row = {"attempt": attempt.attempt_id, "blocked": True,
                    "outcome": "BLOCKED_BY_GUARD", "guard": type(exc).__name__,
                    "detail": str(exc)}
-        except Exception as exc:  # noqa: BLE001 — anything else is a harness fault
+        except Exception as exc:
             row = {"attempt": attempt.attempt_id, "blocked": False,
                    "outcome": "INVALID_NOT_A_REJECTION", "guard": None,
                    "error": type(exc).__name__, "detail": str(exc)}

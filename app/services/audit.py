@@ -69,7 +69,7 @@ def audit_failure(*, action: str, entity_type: str,
             )
             db2.add(row)
             db2.commit()
-    except Exception as exc:  # noqa: BLE001 — forensics must never break the path
+    except Exception as exc:
         log.warning(f"audit_failure_write_failed:{exc}")
 
 

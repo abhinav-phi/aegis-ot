@@ -34,6 +34,12 @@ dev = [
 line-length = 100
 target-version = "py311"
 
+[tool.ruff.lint]
+# R46: the safety guards must fail closed, which means catching broadly on
+# purpose at every boundary (validator, sandbox, workers, battery). BLE001
+# flags exactly those handlers, so it is disabled by design, not by neglect.
+extend-ignore = ["BLE001"]
+
 [tool.ruff.lint.per-file-ignores]
 # B008 = function calls in argument defaults — the idiomatic FastAPI
 # dependency-injection pattern (Depends/File) used across the API layer.
