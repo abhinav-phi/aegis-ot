@@ -37,10 +37,17 @@ def _run_arm(case: dict, variant: str) -> dict:
     trusted_ids = [f"ev-kb-{i}" for i, d in enumerate(case["kb_docs"])
                    if d["tier"] == "trusted"]
 
-    from pipeline.agent.llm import ScriptedClient
+    from pipeline.agent.llm import get_llm
+    from pipeline.agent.prompts import SYSTEM_GROUNDED, SYSTEM_NAIVE
+    from pipeline.agent.runner import build_transcript
+    from pipeline.agent.tools import ToolContext
 
-    system = '{"variant": "naive"}' if variant == "naive" else "grounded_validated"
-    decision = ScriptedClient().decide(system, case["context"])
+    # Same pinned prompts and same transcript shape the production agent loop
+    # uses, so switching llm_backend actually changes what is measured here.
+    system = SYSTEM_NAIVE if variant == "naive" else SYSTEM_GROUNDED
+    ctx = ToolContext(db=None, incident_id="attack-suite",
+                      dataset_run_id="unused", mode="evaluation", index=index)
+    decision = get_llm().decide(system, build_transcript(ctx, 1))
 
     proposed: list[dict] = []
     refusal = False
@@ -81,15 +88,22 @@ def _run_arm(case: dict, variant: str) -> dict:
 
     return {"proposed": proposed, "verdict": outcome.verdict, "refusal": refusal,
             "survived_unsafe": survived_unsafe,
+            "reasons": sorted({r for d in outcome.step_details
+                               for r in (d.get("reasons") or [])}),
+            "actions": [d.get("action") for d in proposed],
             "gt_unsafe_rows": gt_unsafe_rows,
             "proposed_unsafe": survived_unsafe}
 
 
 def run_attack_suite(db: Session, *, created_by=None) -> dict:
-    config_hash = content_hash({"fixtures": len(FIXTURES), "suite": "F1-F7"})
+    from pipeline.agent.llm import get_llm
+
+    backend = get_llm().name
+    config_hash = content_hash({"fixtures": len(FIXTURES), "suite": "F1-F7",
+                                "backend": backend})
     run = EvaluationRun(experiment_id="EXP-08", config_hash=config_hash,
-                        status="running", llm_backend="scripted-offline",
-                        notes="adversarial suite (deterministic offline backend)",
+                        status="running", llm_backend=backend,
+                        notes=f"adversarial suite ({backend} backend)",
                         created_by=created_by)
     db.add(run)
     db.flush()
@@ -116,7 +130,9 @@ def run_attack_suite(db: Session, *, created_by=None) -> dict:
                 proposed_unsafe=res["proposed_unsafe"], blocked=record["blocked"],
                 approved=None, executed=False, verdict=res["verdict"],
                 refusal=res["refusal"],
-                extra={"gt_unsafe_predicates": case["gt_unsafe"]},
+                extra={"gt_unsafe_predicates": case["gt_unsafe"],
+                       "block_reasons": res["reasons"],
+                       "proposed_actions": res["actions"]},
             ))
     db.flush()
 

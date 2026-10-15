@@ -126,6 +126,13 @@ def _detector_metrics(labels, scores, preds) -> dict[str, float]:
     return {k: round(float(v), 6) for k, v in out.items()}
 
 
+def _test_sibling(db: Session, run_row: DatasetRun):
+    """Held-out test split of the same dataset, when present (R23/R29)."""
+    return db.execute(select(DatasetRun).where(
+        DatasetRun.dataset_id == run_row.dataset_id,
+        DatasetRun.split_role == "test")).scalar_one_or_none()
+
+
 # --------------------------------------------------------------------------
 # EXP-01 baseline detector (DET-02)
 # --------------------------------------------------------------------------
@@ -139,11 +146,13 @@ def run_exp01(db: Session, dataset_run_id=None, created_by=None, seed: int = 0) 
                         actor_id=created_by, seed=seed)
     from app.services.pipeline_service import run_detection
 
-    run_detection(db, dataset_run_id=val_run.id, model_version_id=mv.id,
+    eval_run = _test_sibling(db, val_run) or val_run
+    run_detection(db, dataset_run_id=eval_run.id, model_version_id=mv.id,
                   actor_id=created_by)
     from app.db.models import Detection
 
-    rows = db.query(Detection).filter(Detection.model_version_id == mv.id).all()
+    rows = db.query(Detection).filter(Detection.model_version_id == mv.id,
+                                      Detection.dataset_run_id == eval_run.id).all()
     y = [bool(r.ground_truth) for r in rows]
     s = [float(r.score) for r in rows]
     preds = [bool(r.is_anomaly) for r in rows]
@@ -151,10 +160,12 @@ def run_exp01(db: Session, dataset_run_id=None, created_by=None, seed: int = 0) 
     config_hash = content_hash({"exp": "EXP-01", "family": "iso_forest",
                                 "seed": seed, "features": cfg})
     run = _open_run(db, experiment_id="EXP-01", config_hash=config_hash,
-                    notes="Isolation Forest baseline (synthetic fixture)",
+                    notes=f"Isolation Forest baseline on dataset "
+                          f"'{db.get(Dataset, val_run.dataset_id).key}'; tau fit on "
+                          f"validation, scored on {eval_run.split_role}",
                     llm_backend=None, created_by=created_by)
     run.model_version_ids = [str(mv.id)]
-    run.dataset_run_ids = [str(val_run.id)]
+    run.dataset_run_ids = [str(val_run.id), str(eval_run.id)]
     _write_metrics(db, run, "detector", metrics)
     _finish(db, run)
     return {"evaluation_run_id": str(run.id), **metrics}
@@ -201,11 +212,23 @@ def run_exp02(db: Session, dataset_run_id=None, created_by=None, seed: int = 0) 
     t0 = time.perf_counter()
     losses = det.fit(normal if len(normal) else windows, epochs=30)
     fit_s = time.perf_counter() - t0
-    t0 = time.perf_counter()
     scores, _residuals = det.score_and_contribute(windows)
-    infer_ms = (time.perf_counter() - t0) * 1000.0 / max(1, len(windows))  # DET-05/NFR-02
     tau = threshold_from_validation(scores, ~labels.astype(bool),
                                     cfg["threshold_quantile"])
+    # R23: tau is fit on validation GT-normal residuals, then the model is
+    # scored on the held-out test split whenever one exists.
+    eval_row = _test_sibling(db, run_row)
+    scored_run = eval_row if eval_row is not None else run_row
+    if eval_row is not None:
+        e_windows, _e_ts, _e_block, e_labels = _split_arrays(db, store, eval_row)
+        t0 = time.perf_counter()
+        scores, _residuals = det.score_and_contribute(e_windows)
+        n_scored = len(e_windows)
+        labels = e_labels
+    else:
+        n_scored = len(windows)
+        t0 = time.perf_counter()
+    infer_ms = (time.perf_counter() - t0) * 1000.0 / max(1, n_scored)  # DET-05/NFR-02
     preds = list(scores > tau)
     metrics = _detector_metrics(labels, scores, preds)
     metrics["inference_ms_per_window"] = round(infer_ms, 3)
@@ -234,8 +257,11 @@ def run_exp02(db: Session, dataset_run_id=None, created_by=None, seed: int = 0) 
         artifact_bytes=artifact, artifact_name="tcn_ae_state.bin",
     )
     mv.metrics_summary = {**mv.metrics_summary, "mlflow_logged": mlflow_ok}
+    run.notes = (f"TCN-AE proposed detector on dataset "
+                 f"'{db.get(Dataset, run_row.dataset_id).key}'; tau fit on "
+                 f"{run_row.split_role}, scored on {scored_run.split_role}")
     run.model_version_ids = [str(mv.id)]
-    run.dataset_run_ids = [str(run_row.id)]
+    run.dataset_run_ids = [str(run_row.id), str(scored_run.id)]
     _write_metrics(db, run, "detector", metrics)
     _finish(db, run)
     return {"evaluation_run_id": str(run.id), **metrics}
@@ -265,10 +291,14 @@ def _agent_arm_metrics(db: Session, run: EvaluationRun, *, variant: str,
     from eval.attack_suite.fixtures import FIXTURES
     from eval.attack_suite.runner import _pred_match
     from eval.metrics.charter import asr_case, block_rate, refusal_rate
-    from pipeline.agent.llm import ScriptedClient
+    from pipeline.agent.llm import get_llm
+    from pipeline.agent.prompts import SYSTEM_GROUNDED, SYSTEM_NAIVE
+    from pipeline.agent.runner import build_transcript
+    from pipeline.agent.tools import ToolContext
     from pipeline.validator.engine import EvidenceIndex, validate_plan
     from pipeline.validator.policy import load_default_registry
 
+    client = get_llm()
     records: list[dict] = []
     registry = load_default_registry()
     for case in FIXTURES:
@@ -285,8 +315,12 @@ def _agent_arm_metrics(db: Session, run: EvaluationRun, *, variant: str,
         trusted_ids = [f"ev-kb-{i}" for i, d in enumerate(docs)
                        if d["tier"] == "trusted"]
 
-        system = '{"variant": "naive"}' if variant == "naive" else "grounded_validated"
-        decision = ScriptedClient().decide(system, case["context"])
+        # Pinned prompts and the production transcript shape, so the measured
+        # arm follows whichever llm_backend is configured.
+        system = SYSTEM_NAIVE if variant == "naive" else SYSTEM_GROUNDED
+        ctx = ToolContext(db=None, incident_id="attack-suite",
+                          dataset_run_id="unused", mode="evaluation", index=index)
+        decision = client.decide(system, build_transcript(ctx, 1))
         proposed: list[dict] = []
         refusal = False
         tool = decision.get("tool")
@@ -391,12 +425,15 @@ _EXP_NOTES = {
 
 
 def run_agent_experiment(db: Session, experiment_id: str, created_by=None) -> dict:
+    from pipeline.agent.llm import get_llm
+
     specs = _ARM_SPECS[experiment_id]
+    backend = get_llm().name
     config_hash = content_hash({
         "exp": experiment_id, "backend": get_settings().llm_backend,
         "fixtures": 32, "arms": specs})
     run = _open_run(db, experiment_id=experiment_id, config_hash=config_hash,
-                    notes=_EXP_NOTES[experiment_id], llm_backend="scripted-offline",
+                    notes=_EXP_NOTES[experiment_id], llm_backend=backend,
                     created_by=created_by)
     out: dict = {}
     for spec in specs:

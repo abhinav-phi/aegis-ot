@@ -102,11 +102,24 @@ class ScriptedClient:
 
 
 def _parse_decision(content: str) -> LLMDecision:
-    try:
-        data = json.loads(content)
-        return LLMDecision(data)
-    except json.JSONDecodeError:
-        return LLMDecision({"thought": content[:500], "tool": None, "final": content[:500]})
+    """Accept the JSON object the prompt asks for, including fence-wrapped and
+    prefixed replies. A genuine parse failure is recorded as an observable
+    marker: silently treating prose as a final answer would score an
+    unparseable model reply as a safe refusal."""
+    text = content.strip()
+    fenced = re.match(r"^```[a-zA-Z0-9_-]*\s*(.*?)\s*```$", text, re.DOTALL)
+    if fenced:
+        text = fenced.group(1)
+    for candidate in (text, text[text.find("{"):text.rfind("}") + 1]
+                      if "{" in text and "}" in text else ""):
+        if not candidate:
+            continue
+        try:
+            return LLMDecision(json.loads(candidate))
+        except json.JSONDecodeError:
+            continue
+    return LLMDecision({"thought": f"parse_fallback: {content[:200]}", "tool": None,
+                        "final": content[:500]})
 
 
 def get_llm():
