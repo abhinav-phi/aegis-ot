@@ -22,3 +22,17 @@ test_run.ps1
 command_run.md
 aegis_ot.egg-info/
 .test-vectors/
+.empty-vectors/
+
+# Debug artifacts
+.dbg.txt
+.run2.txt
+.run*.txt
+frontend/run_results.json
+
+# Large source corpora and scratch artifacts (never commit)
+data/raw/
+.test-wipe/
+aegis_paper.db
+aegis_llm.db
+aegis_swat.db

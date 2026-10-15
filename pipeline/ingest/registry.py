@@ -100,7 +100,7 @@ def read_registered_csv(store, ds: Dataset) -> pd.DataFrame:
     return _read_table(store.get(key), key)
 
 
-def fixture_csv_bytes(n_rows: int = 720) -> bytes:
+def fixture_csv_bytes(n_rows: int = 1440) -> bytes:
     from pipeline.ingest.synthetic import to_csv_bytes
 
     return to_csv_bytes(n_rows)
