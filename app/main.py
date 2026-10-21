@@ -13,11 +13,16 @@ from app.api.auth import router as auth_router
 from app.api.data import audit_router, demo_router, eval_router
 from app.api.data import router as data_router
 from app.api.operations import router as ops_router
+from app.core.config import get_settings
 from app.core.exceptions import AegisError
 from app.core.logging import configure_logging, get_logger, request_id_ctx
 from app.db.immutability import register_immutability_listeners
 
 log = get_logger("aegis.app")
+
+#: Browser client, the vite dev proxy and the nginx location block all speak
+#: /api/... ; the routers are mounted under this prefix so the paths line up.
+API_PREFIX = get_settings().api_prefix
 
 
 def create_app() -> FastAPI:
@@ -57,14 +62,17 @@ def create_app() -> FastAPI:
                             content={"ok": False, "code": exc.code,
                                      "detail": str(exc), "details": exc.details})
 
-    app.include_router(auth_router)
-    app.include_router(users_router)
+    app.include_router(auth_router, prefix=API_PREFIX)
+    app.include_router(users_router, prefix=API_PREFIX)
+    app.include_router(data_router, prefix=API_PREFIX)
+    app.include_router(eval_router, prefix=API_PREFIX)
+    app.include_router(audit_router, prefix=API_PREFIX)
+    app.include_router(demo_router, prefix=API_PREFIX)
+    app.include_router(ops_router, prefix=API_PREFIX)
+    # Health probes are unprefixed for the container healthchecks, and also
+    # reachable under /api for the browser client.
     app.include_router(health_router)
-    app.include_router(data_router)
-    app.include_router(eval_router)
-    app.include_router(audit_router)
-    app.include_router(demo_router)
-    app.include_router(ops_router)
+    app.include_router(health_router, prefix=API_PREFIX)
 
     return app
 

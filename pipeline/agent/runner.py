@@ -107,9 +107,18 @@ def run_agent(db: Session, *, run_id, incident_id, dataset_run_id, variant: str,
 
 
 def _compact(result: dict) -> dict:
+    """Keep stored transcripts small without destroying what the validator re-reads.
+
+    `evidence` is the C1 provenance input when a plan is re-validated from the
+    database, so it stays structured; only its free text is clipped.
+    """
     out = {}
     for k, v in result.items():
-        out[k] = v if not isinstance(v, (dict, list)) else str(v)[:300]
+        if k == "evidence" and isinstance(v, list):
+            out[k] = [{**e, "text": str(e.get("text", ""))[:300]}
+                      for e in v if isinstance(e, dict)]
+        else:
+            out[k] = v if not isinstance(v, (dict, list)) else str(v)[:300]
     return out
 
 

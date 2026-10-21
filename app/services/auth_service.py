@@ -20,6 +20,7 @@ from app.core.security import (
     set_refresh_cookie,
     verify_password,
 )
+from app.core.timeutil import aware
 from app.db.models import RefreshToken, User, UserRole
 from app.services.audit import audit
 
@@ -71,7 +72,9 @@ def refresh(db: Session, response: Response, raw_token: str | None) -> dict:
     ).scalar_one_or_none()
 
     # Reuse detection: a rotated/revoked token presented again ⇒ revoke family.
-    if row is not None and (row.revoked_at is not None or row.expires_at < _utcnow()):
+    # expires_at is naive when it comes back from SQLite (see core.timeutil).
+    expires = aware(row.expires_at) if row is not None else None
+    if row is not None and (row.revoked_at is not None or expires < _utcnow()):
         db.execute(
             update(RefreshToken)
             .where(RefreshToken.family == row.family, RefreshToken.revoked_at.is_(None))
@@ -81,7 +84,7 @@ def refresh(db: Session, response: Response, raw_token: str | None) -> dict:
               entity_type="refresh_family", entity_id=row.family,
               after={"revoked_family": row.family})
         raise AuthError("invalid_refresh_token", code="invalid_refresh_token")
-    if row is None or row.expires_at < _utcnow():
+    if row is None or expires < _utcnow():
         raise AuthError("invalid_refresh_token", code="invalid_refresh_token")
 
     user = db.get(User, row.user_id)

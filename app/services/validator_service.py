@@ -45,6 +45,8 @@ def build_evidence_index(db: Session, run_id) -> EvidenceIndex:
         candidates.extend(
             result.get("evidence", []) if isinstance(result, dict) else [])
         for c in candidates:
+            if not isinstance(c, dict):
+                continue  # transcripts written before evidence stayed structured
             eid = c.get("validator_evidence_id") or c.get("evidence_id")
             if not eid:
                 continue

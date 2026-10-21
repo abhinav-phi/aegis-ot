@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     object_store: str = "local"  # local | minio
     local_object_root: str = "./.objects"
+    #: All business routes are mounted under this prefix; the browser client,
+    #: the vite proxy and the nginx location block all use it too. The refresh
+    #: cookie path is derived from it so the session survives a page reload.
+    api_prefix: str = "/api"
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str = "aegis"
     minio_secret_key: str = "aegis-secret"

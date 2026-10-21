@@ -5,7 +5,7 @@ import pytest
 
 
 def _login(client, email, password="password-12-chars"):
-    return client.post("/auth/login", json={"email": email, "password": password})
+    return client.post("/api/auth/login", json={"email": email, "password": password})
 
 
 def test_login_success_sets_cookie_and_bearer(client, users):
@@ -29,21 +29,21 @@ def test_login_wrong_password_generic_error(client, users):
 def test_viewer_cannot_approve(client, users):
     r = _login(client, "viewer@example.com")
     token = r.json()["data"]["access_token"]
-    res = client.post("/approvals/00000000-0000-0000-0000-000000000000/approve",
+    res = client.post("/api/approvals/00000000-0000-0000-0000-000000000000/approve",
                       headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 403
 
 
 def test_analyst_cannot_list_audit(client, users):
     token = _login(client, "analyst@example.com").json()["data"]["access_token"]
-    res = client.get("/audit", headers={"Authorization": f"Bearer {token}"})
+    res = client.get("/api/audit", headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 403
 
 
 def test_admin_can_set_role(client, users):
     token = _login(client, "admin@example.com").json()["data"]["access_token"]
     uid = str(users["viewer"].id)
-    res = client.put(f"/users/{uid}/role", json={"role": "analyst"},
+    res = client.put(f"/api/users/{uid}/role", json={"role": "analyst"},
                      headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 200
     assert res.json()["data"]["role"] == "analyst"
@@ -52,7 +52,7 @@ def test_admin_can_set_role(client, users):
 def test_analyst_cannot_set_role(client, users):
     token = _login(client, "analyst@example.com").json()["data"]["access_token"]
     uid = str(users["viewer"].id)
-    res = client.put(f"/users/{uid}/role", json={"role": "admin"},
+    res = client.put(f"/api/users/{uid}/role", json={"role": "admin"},
                      headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 403
 
@@ -63,7 +63,7 @@ def test_inactive_user_rejected_on_me(client, users, db):
     token = _login(client, "viewer@example.com")
     if token.status_code != 200:
         pytest.skip("inactive login blocked at login (also acceptable)")
-    me = client.get("/auth/me", headers={
+    me = client.get("/api/auth/me", headers={
         "Authorization": f"Bearer {token.json()['data']['access_token']}"})
     assert me.status_code == 401
 

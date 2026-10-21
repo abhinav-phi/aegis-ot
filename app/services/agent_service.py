@@ -6,7 +6,7 @@ import datetime as dt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ConflictError, ForbiddenError
+from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.db.models import AgentRun, Incident
 from app.services import audit as audit_svc
 from app.services.state import incident_transition
@@ -19,6 +19,13 @@ HEARTBEAT_S = 100  # ≤ TTL/3 so a live worker always outlives the reaper windo
 
 def _utcnow() -> dt.datetime:
     return dt.datetime.now(dt.UTC)
+
+
+def get_run_or_404(db: Session, run_id) -> AgentRun:
+    r = db.get(AgentRun, run_id)
+    if r is None:
+        raise NotFoundError("agent_run_not_found")
+    return r
 
 
 def create_and_start_run(db: Session, *, incident: Incident, variant: str,

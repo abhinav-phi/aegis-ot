@@ -111,7 +111,7 @@ def set_refresh_cookie(response: Response, raw_token: str) -> None:
         httponly=True,
         secure=_SETTINGS.env != "dev",
         samesite="lax",
-        path="/auth",
+        path=f"{_SETTINGS.api_prefix}/auth",
     )
 
 
